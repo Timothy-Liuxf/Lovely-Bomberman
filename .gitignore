@@ -3,3 +3,4 @@
 *.vcxproj
 *.vcxproj.*
 *.aps
+/imageMaker/

@@ -23,19 +23,32 @@ int APIENTRY _tWinMain(_In_ HINSTANCE hInstance,
 
     if (!MyRegisterClass(hInstance)) 
     {
-        MessageBox(NULL, TEXT("Register failed!"), lpszError, MB_OK | MB_ICONERROR); 
+        MessageBox(NULL, TEXT("Register failed!"), c_lpszError, MB_OK | MB_ICONERROR); 
         return FALSE; 
     }
 
     // 执行应用程序初始化:
     if (!InitInstance(hInstance, nCmdShow))
     {
-        MessageBox(NULL, TEXT("Window creating failed!"), lpszError, MB_OK | MB_ICONERROR);
+        MessageBox(NULL, TEXT("Window creating failed!"), c_lpszError, MB_OK | MB_ICONERROR);
         return FALSE;
     }
 
 
-    MSG msg;
+    MSG msg; 
+
+    //加载位图
+
+    hBmBkgnd = (HBITMAP)LoadImage(hInst, TEXT("image\\bkgnd.bmp"), IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE); 
+    hBmRole = (HBITMAP)LoadImage(hInst, TEXT("image\\role.bmp"), IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE); 
+
+    if (!hBmBkgnd || !hBmRole)
+    {
+        MessageBox(hMainWnd, TEXT("加载图片失败！"), c_lpszError, MB_OK | MB_ICONERROR); 
+    }
+
+    GetObject(hBmBkgnd, sizeof(BITMAP), &bmBkgnd); 
+    GetObject(hBmRole, sizeof(BITMAP), &bmRole); 
 
     // 主消息循环:
     while (GetMessage(&msg, NULL, 0, 0))
@@ -69,7 +82,7 @@ ATOM MyRegisterClass(HINSTANCE hInstance)
     wcex.hCursor = LoadCursor(NULL, IDC_ARROW);
     wcex.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
     wcex.lpszMenuName = NULL;
-    wcex.lpszClassName = lpszWndClassName;
+    wcex.lpszClassName = c_lpszWndClassName;
     wcex.hIconSm = LoadIcon(NULL, IDI_APPLICATION);
 
     return RegisterClassEx(&wcex);
@@ -85,8 +98,10 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 {
     hInst = hInstance;  //将实例句柄存储在全局变量中
 
-    HWND hWnd = CreateWindow(lpszWndClassName, lpszMainWndTitle, WS_VISIBLE | WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_BORDER | WS_MINIMIZEBOX,
-        CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, NULL, NULL, hInstance, NULL);
+    capMenuAppendCy = GetSystemMetrics(SM_CYCAPTION) + GetSystemMetrics(SM_CYMENU); 
+
+    HWND hWnd = CreateWindow(c_lpszWndClassName, c_lpszMainWndTitle, WS_VISIBLE | WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_BORDER | WS_MINIMIZEBOX,
+        mainWndPos.x, mainWndPos.y, mainWndSize.x, mainWndSize.y + capMenuAppendCy, NULL, NULL, hInstance, NULL);
 
     if (!hWnd)
     {

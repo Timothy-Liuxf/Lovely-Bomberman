@@ -1,6 +1,11 @@
+/可爱炸弹人/Debug/
+/可爱炸弹人/Release/
+/可爱炸弹人/*.vcxproj
+/可爱炸弹人/*.vcxproj.*
+/可爱炸弹人/*.aps
+/可爱炸弹人/*.sln
+/可爱炸弹人/imageMaker/
 /Debug/
 /Release/
-*.vcxproj
-*.vcxproj.*
-*.aps
-/imageMaker/
+/.vs/
+

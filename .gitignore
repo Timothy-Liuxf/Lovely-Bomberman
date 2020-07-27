@@ -3,9 +3,8 @@
 /可爱炸弹人/*.vcxproj
 /可爱炸弹人/*.vcxproj.*
 /可爱炸弹人/*.aps
-/可爱炸弹人/*.sln
 /可爱炸弹人/imageMaker/
 /Debug/
 /Release/
 /.vs/
-
+*.sln

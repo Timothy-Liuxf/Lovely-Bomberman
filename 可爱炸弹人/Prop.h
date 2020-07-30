@@ -141,10 +141,7 @@ public:
 	void SetLaidLeft(sigPosType x, sigPosType y, int moveSpeed) { SetLaid(x, y, direction::Left, moveSpeed); }
 	void SetLaidRight(sigPosType x, sigPosType y, int moveSpeed) { SetLaid(x, y, direction::Right, moveSpeed); }
 
-	//道具移动
-	void Move() { obj_base::Move(direct); }
-
-	//检查是否要消失/爆炸了
+	//检查是否要消失了
 	virtual bool AboutToDisappear() const = 0; 
 
 	virtual ~SpecialBomb() {}
@@ -251,17 +248,29 @@ private:
 class Grenade final : public SpecialBomb
 {
 public: 
-	Grenade(sigPosType x, sigPosType y, sigPosType maxDistance) : SpecialBomb(x, y), leftDistance(maxDistance) {}
+	Grenade(sigPosType x, sigPosType y, sigPosType maxDistance, int maxTimeLeft) : SpecialBomb(x, y), leftDistance(maxDistance), timeLeft(maxTimeLeft) {}
 	virtual propType GetPropType() const override { return propType::grenade; }
 	
 	sigPosType GetLeftDistance() const { return leftDistance; }
 
 	//检查手榴弹是否要爆炸了
-	virtual bool AboutToDisappear() const override { return leftDistance <= 0; }
+	bool AboutToBomb() const { return leftDistance <= 0; }
+
+	//检查手榴弹是否要消失了
+	virtual bool AboutToDisappear() const override { return timeLeft <= 0; }
+
+	//手榴弹移动
+	void Move(); 
+
+	//减少时间
+	void SubTimeLeft(int sub) { timeLeft -= sub; }
 
 	virtual ~Grenade() {}
+
 private: 
+
 	sigPosType leftDistance;		//剩余可以行进的距离
+	int timeLeft;					//爆炸后距离消失的时间
 }; 
 
 //导弹
@@ -269,6 +278,11 @@ class Missil final : public SpecialBomb
 {
 public: 
 	Missil(sigPosType x, sigPosType y) : SpecialBomb(x, y) {}
+
+	//导弹移动
+	void Move() { obj_base::Move(direct); }
+
+	virtual bool AboutToDisappear() const override { return false; }
 
 	virtual ~Missil() {}
 };

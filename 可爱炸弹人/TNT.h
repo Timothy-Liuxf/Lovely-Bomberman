@@ -19,7 +19,7 @@ public:
 	int GetOwnerID() const { return ownerID; }
 	int GetDistance() const { return distance; }
 
-	virtual objType GetObjType() const { return objType::tnt; }
+	virtual objType GetObjType() const override { return objType::tnt; }
 
 	//获取剩余爆炸或存留时间
 	int GetTimeLeft() const { return timeLeft; }

@@ -27,7 +27,7 @@ public:
 		isMissing(false), 
 		weapon(NULL) {}
 
-	virtual objType GetObjType() const { return objType::role; }
+	virtual objType GetObjType() const override { return objType::role; }
 
 	//重设角色（是否重设分数）
 	void Reset(bool resetScore); 

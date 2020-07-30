@@ -34,7 +34,7 @@ public:
 	};
 
 	Prop(sigPosType x, sigPosType y) : obj_base(x, y, false, 0), state(propState::unpicked) {}
-	virtual objType GetObjType() const { return objType::prop; }
+	virtual objType GetObjType() const override { return objType::prop; }
 	//获取道具种类
 	virtual propType GetPropType() const = 0; 
 
@@ -74,52 +74,52 @@ class Glove : public Buff	//手套类
 {
 public: 
 	Glove(sigPosType x, sigPosType y) : Buff(x, y) {}
-	virtual propType GetPropType() const { return propType::glove; }
+	virtual propType GetPropType() const override { return propType::glove; }
 	virtual ~Glove() {}
 };
 
 //盾牌类
-class Shield : public Buff
+class Shield final : public Buff
 {
 public: 
 	Shield(sigPosType x, sigPosType y) : Buff(x, y) {}
-	virtual propType GetPropType() const { return propType::shield; }
+	virtual propType GetPropType() const override { return propType::shield; }
 	virtual ~Shield() {}
 };
 
 //增加炮弹数
-class AddTNT : public Buff
+class AddTNT final : public Buff
 {
 public:
 	AddTNT(sigPosType x, sigPosType y) : Buff(x, y) {}
-	virtual propType GetPropType() const { return propType::addtnt; }
+	virtual propType GetPropType() const override { return propType::addtnt; }
 	virtual ~AddTNT() {}
 };
 
 //增加生命
-class AddLife : public Buff
+class AddLife final : public Buff
 {
 public:
 	AddLife(sigPosType x, sigPosType y) : Buff(x, y) {}
-	virtual propType GetPropType() const { return propType::addlife; }
+	virtual propType GetPropType() const override { return propType::addlife; }
 	virtual ~AddLife() {}
 };
 
 //跑鞋
-class Shoe : public Buff
+class Shoe final : public Buff
 {
 public:
 	Shoe(sigPosType x, sigPosType y) : Buff(x, y) {}
-	virtual propType GetPropType() const { return propType::shoe; }
+	virtual propType GetPropType() const override { return propType::shoe; }
 	virtual ~Shoe() {}
 }; 
 
 //金坷垃
-class JinKeLa : public Buff
+class JinKeLa final : public Buff
 {
 public:
 	JinKeLa(sigPosType x, sigPosType y) : Buff(x, y) {}
-	virtual propType GetPropType() const { return propType::jinKeLa; }
+	virtual propType GetPropType() const override { return propType::jinKeLa; }
 	virtual ~JinKeLa() {}
 };
 
@@ -160,11 +160,11 @@ protected:
 
 
 //催泪瓦斯
-class Lachrymator : public SpecialBomb
+class Lachrymator final : public SpecialBomb
 {
 public:
 	Lachrymator(sigPosType x, sigPosType y, int timeLeft) : SpecialBomb(x, y), timeLeft(timeLeft), visible(true) {}
-	virtual propType GetPropType() const { return propType::lachrymator; }
+	virtual propType GetPropType() const override { return propType::lachrymator; }
 
 	int GetTimeLeft() const { return timeLeft; }
 	void SubTimeLeft(int subTime) { timeLeft -= subTime; }
@@ -174,7 +174,7 @@ public:
 	void SetInvisible() { visible = false; }
 
 	//检查催泪瓦斯是否要消失了
-	virtual bool AboutToDisappear() const { return timeLeft <= 0; }
+	virtual bool AboutToDisappear() const override { return timeLeft <= 0; }
 
 	virtual ~Lachrymator() {}
 
@@ -185,11 +185,11 @@ private:
 };
 
 //地雷
-class Mine : public SpecialBomb
+class Mine final : public SpecialBomb
 {
 public: 
 	Mine(sigPosType x, sigPosType y, int timeLeft) : SpecialBomb(x, y), timeLeft(timeLeft), visible(true) {}
-	virtual propType GetPropType() const { return propType::mine; }
+	virtual propType GetPropType() const override { return propType::mine; }
 
 	int GetTimeLeft() const { return timeLeft; }
 	void SubTimeLeft(int subTime) { timeLeft -= subTime; }
@@ -199,7 +199,7 @@ public:
 	void SetInvisible() { visible = false; }
 
 	//检查地雷是否要消失了
-	virtual bool AboutToDisappear() const { return timeLeft <= 0; }
+	virtual bool AboutToDisappear() const override { return timeLeft <= 0; }
 
 	virtual ~Mine() {}
 
@@ -210,16 +210,17 @@ private:
 }; 
 
 //火焰枪
-class Fire : public SpecialBomb
+class Fire final : public SpecialBomb
 {
 public:
 	Fire(sigPosType x, sigPosType y, int timeLeft) : SpecialBomb(x, y), timeLeft(timeLeft) {}
+	virtual propType GetPropType() const override { return propType::fire; }
 
 	int GetTimeLeft() const { return timeLeft; }
 	void SubTimeLeft(int subTime) { timeLeft -= subTime; }
 
 	//检查火焰是否要消失了
-	virtual bool AboutToDisappear() const { return timeLeft <= 0; }
+	virtual bool AboutToDisappear() const override { return timeLeft <= 0; }
 
 	virtual ~Fire() {}
 private:
@@ -227,17 +228,17 @@ private:
 };
 
 //寒冰枪
-class Ice : public SpecialBomb
+class Ice final : public SpecialBomb
 {
 public:
 	Ice(sigPosType x, sigPosType y, int timeLeft) : SpecialBomb(x, y), timeLeft(timeLeft) {}
-	virtual propType GetPropType() const { return propType::mine; }
+	virtual propType GetPropType() const override { return propType::mine; }
 
 	int GetTimeLeft() const { return timeLeft; }
 	void SubTimeLeft(int subTime) { timeLeft -= subTime; }
 
 	//检查冰是否要消失了
-	virtual bool AboutToDisappear() const { return timeLeft <= 0; }
+	virtual bool AboutToDisappear() const override { return timeLeft <= 0; }
 
 	virtual ~Ice() {}
 
@@ -247,16 +248,16 @@ private:
 };
 
 //手榴弹
-class Grenade : public SpecialBomb
+class Grenade final : public SpecialBomb
 {
 public: 
 	Grenade(sigPosType x, sigPosType y, sigPosType maxDistance) : SpecialBomb(x, y), leftDistance(maxDistance) {}
-	virtual propType GetPropType() const { return propType::grenade; }
+	virtual propType GetPropType() const override { return propType::grenade; }
 	
 	sigPosType GetLeftDistance() const { return leftDistance; }
 
 	//检查手榴弹是否要爆炸了
-	virtual bool AboutToDisappear() const { return leftDistance <= 0; }
+	virtual bool AboutToDisappear() const override { return leftDistance <= 0; }
 
 	virtual ~Grenade() {}
 private: 
@@ -264,7 +265,7 @@ private:
 }; 
 
 //导弹
-class Missil : public SpecialBomb
+class Missil final : public SpecialBomb
 {
 public: 
 	Missil(sigPosType x, sigPosType y) : SpecialBomb(x, y) {}

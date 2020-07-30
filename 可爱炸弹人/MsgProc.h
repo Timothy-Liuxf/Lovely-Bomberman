@@ -9,7 +9,7 @@
 
 #include "framework.h"
 #include "str.h"
-#include "globals.h"
+#include "UI.h"
 
 LRESULT CALLBACK    WndProc(HWND, UINT, WPARAM, LPARAM); 
 

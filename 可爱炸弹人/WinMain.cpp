@@ -6,7 +6,7 @@
 #include "framework.h"
 #include "resource.h"
 #include "str.h"
-#include "globals.h"
+#include "UI.h"
 #include "MsgProc.h"
 
 ATOM                MyRegisterClass(HINSTANCE hInstance);
@@ -39,16 +39,7 @@ int APIENTRY _tWinMain(_In_ HINSTANCE hInstance,
 
     //加载位图
 
-    hBmBkgnd = (HBITMAP)LoadImage(hInst, TEXT("image\\bkgnd.bmp"), IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE); 
-    hBmRole = (HBITMAP)LoadImage(hInst, TEXT("image\\role.bmp"), IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE); 
-
-    if (!hBmBkgnd || !hBmRole)
-    {
-        MessageBox(hMainWnd, TEXT("加载图片失败！"), c_lpszError, MB_OK | MB_ICONERROR); 
-    }
-
-    GetObject(hBmBkgnd, sizeof(BITMAP), &bmBkgnd); 
-    GetObject(hBmRole, sizeof(BITMAP), &bmRole); 
+    mainGameUI.LoadGameImg(); 
 
     // 主消息循环:
     while (GetMessage(&msg, NULL, 0, 0))

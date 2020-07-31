@@ -24,12 +24,6 @@ BOOL BasicWindow::Init
 	return TRUE; 
 }
 
-//
-//  函数: MyRegisterClass()
-//
-//  目标: 注册窗口类。
-//
-
 
 //
 //   函数: InitInstance(HINSTANCE, int)
@@ -39,7 +33,7 @@ BOOL BasicWindow::Init
 
 BOOL BasicWindow::InitInstance(HINSTANCE hInstance, int nCmdShow, int x, int y, int cx, int cy, DWORD dwStyle, LPCTSTR c_lpszWndClassName, LPCTSTR c_lpszWndTitle)
 {
-    hInst = hInstance;  //将实例句柄存储在全局变量中
+    m_hInst = hInstance;  //将实例句柄存储在全局变量中
 
     HWND hWnd = CreateWindow(c_lpszWndClassName, c_lpszWndTitle, dwStyle,
         x, y, cx, cy, NULL, NULL, hInstance, this); 
@@ -49,7 +43,7 @@ BOOL BasicWindow::InitInstance(HINSTANCE hInstance, int nCmdShow, int x, int y, 
         return FALSE;
     }
 
-    hMainWnd = hWnd;    //将主窗口句柄存储在全局变量中
+    m_hWnd = hWnd;    //将主窗口句柄存储在全局变量中
 
     ShowWindow(hWnd, nCmdShow);
     UpdateWindow(hWnd);
@@ -71,13 +65,13 @@ LRESULT CALLBACK BasicWindow::WndProc(HWND hWnd, UINT message, WPARAM wParam, LP
     {
         if (message == WM_DESTROY)
         {
-            thisWnd->hMainWnd = NULL; 
+            thisWnd->m_hWnd = NULL; 
             PostQuitMessage(0); 
             return 0; 
         }
         else return DefWindowProc(hWnd, message, wParam, lParam); 
     }
-    if (message == WM_DESTROY) thisWnd->hMainWnd = NULL; 
+    if (message == WM_DESTROY) thisWnd->m_hWnd = NULL; 
     return 0; 
 }
 

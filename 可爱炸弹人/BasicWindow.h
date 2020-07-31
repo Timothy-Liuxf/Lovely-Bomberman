@@ -26,8 +26,8 @@ protected:
 
 	//关于窗口
 
-	HINSTANCE hInst;					//当前实例
-	HWND hMainWnd = NULL;				//主窗口句柄
+	HINSTANCE m_hInst;					//当前实例
+	HWND m_hWnd = NULL;				//主窗口句柄
 
 	//创建窗口
 	BOOL Init

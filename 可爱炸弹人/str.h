@@ -13,10 +13,6 @@
 //窗口定义
 
 static LPCTSTR c_lpszWndClassName = TEXT("LovelyBombermanMainWindow");	//窗口类名
-static LPCTSTR c_lpszMainWndTitle = TEXT("可爱炸弹人");					//主窗口标题
-
-//错误提示
-
-static LPCTSTR c_lpszError = TEXT("Error");								//错误
+static LPCTSTR c_lpszWndTitle = TEXT("可爱炸弹人");						//主窗口标题
 
 #endif	// #ifndef STR_H

@@ -1,12 +1,85 @@
 #include "UI.h"
 
-HINSTANCE hInst; 
-HWND hMainWnd; 
-CONST LONG objSize = 40; 
-CONST LONG propSize = 30;
-CONST POINT mainWndPos = { 0, 0 }; 
-CONST POINT mainWndSize = { (objSize * 15) + 200, objSize * 13 }; 
-LONG capMenuAppendCy; 
+int UI::Begin(HINSTANCE hInstance, int nCmdShow)
+{
+    //定义窗口样式
+    WNDCLASSEX wcex;
+    wcex.cbSize = sizeof(WNDCLASSEX);
+    wcex.style = CS_HREDRAW | CS_VREDRAW;
+    wcex.cbClsExtra = 0;
+    wcex.cbWndExtra = 0;
+    wcex.hInstance = hInstance;
+    wcex.hIcon = LoadIcon(NULL, IDI_APPLICATION);
+    wcex.hCursor = LoadCursor(nullptr, IDC_ARROW);
+    wcex.hbrBackground = (HBRUSH)GetStockObject(BLACK_BRUSH);
+    wcex.lpszMenuName = NULL;
+    wcex.lpszClassName = c_lpszWndClassName;
+    wcex.hIconSm = LoadIcon(NULL, IDI_APPLICATION);
+
+    capMenuAppendCy = GetSystemMetrics(SM_CYMENU) + GetSystemMetrics(SM_CYCAPTION); 
+
+    Init(hInstance, nCmdShow, 0, 0, mainWndSize.x, mainWndSize.y + capMenuAppendCy, 
+        WS_VISIBLE | WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_BORDER | WS_MINIMIZEBOX, c_lpszWndTitle, wcex);
+
+    MSG msg;
+
+    //加载位图
+
+    LoadGameImg();
+
+    // 主消息循环:
+    while (GetMessage(&msg, NULL, 0, 0))
+    {
+        TranslateMessage(&msg);
+        DispatchMessage(&msg);
+    }
+
+    return (int)msg.wParam; 
+}
+
+//消息处理函数
+bool UI::messageProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
+{
+    switch (message)
+    {
+    case WM_CREATE: 
+        CreateBuffer(hWnd);
+        SetTimer(hWnd, TIMER_ID_START, 500, NULL);
+        SetTimer(hWnd, 500, 20, NULL);
+        break; 
+    case WM_PAINT:
+    {
+        Paint(hWnd, TRUE);
+    }
+    break;
+    case WM_LBUTTONUP:
+        InvalidateRect(hWnd, NULL, FALSE);
+        break;
+    case WM_TIMER:
+        if (wParam == TIMER_ID_START)
+        {
+            InvalidateRect(hWnd, NULL, TRUE);
+            KillTimer(hWnd, TIMER_ID_START);
+        }
+        else
+        {
+            InvalidateRect(hWnd, NULL, FALSE);
+        }
+        break; 
+    case WM_DESTROY: 
+        if (hBmMem)
+        {
+            DeleteObject(hBmMem); 
+            hBmMem = NULL; 
+        }
+        KillTimer(hWnd, 500); 
+        PostQuitMessage(0); 
+        break; 
+    default: 
+        return false; 
+    }
+    return true; 
+}
 
 bool UI::LoadGameImg()
 {
@@ -216,5 +289,3 @@ UI::~UI()
 {
     if(hBmMem) DeleteObject(hBmMem); 
 }
-
-UI mainGameUI; 

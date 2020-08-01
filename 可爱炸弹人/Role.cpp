@@ -1,6 +1,6 @@
 #include "Role.h"
 
-void Role::Reset(bool resetScore)
+void Role::Reset(bool resetScore, bool resetLife)
 {
 	distance = 2; 
 	tntNum = 1; 
@@ -10,6 +10,9 @@ void Role::Reset(bool resetScore)
 	isMissing = false; 
 	weapon = NULL; 
 	if (resetScore) score = 0; 
+	if (resetLife) life = initialLife; 
+	if (life > 0) isLiving = true;
+	else isLiving = false; 
 }
 
 bool Role::LayTNT()

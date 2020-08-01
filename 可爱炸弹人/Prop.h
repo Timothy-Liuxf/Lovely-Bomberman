@@ -14,7 +14,7 @@ class Prop : public obj_base
 {
 public:
 
-	enum propType
+	enum class propType
 	{
 		//buf类道具
 		glove,		//手套
@@ -50,7 +50,7 @@ public:
 
 protected: 
 
-	enum propState		//道具的状态
+	enum class propState		//道具的状态
 	{
 		unpicked,		//未被捡起
 		picked,			//已经被捡起

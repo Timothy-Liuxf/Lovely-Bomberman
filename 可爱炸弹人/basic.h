@@ -21,7 +21,7 @@ public:
 		tagPosType(sigPosType x, sigPosType y) : x(x), y(y) {}
 	} posType;
 
-	enum objType		//对象类型
+	enum class objType		//对象类型
 	{
 		role,			//角色
 		tnt,			//普通炸弹
@@ -64,7 +64,7 @@ public:
 
 protected:
 
-	enum direction		//方向
+	enum class direction		//方向
 	{
 		Null, 
 		Up, 

@@ -15,7 +15,7 @@ class Role : public obj_base
 {
 public: 
 
-	Role(sigPosType x, sigPosType y, int moveSpeed, int id)
+	Role(sigPosType x, sigPosType y, int moveSpeed, int id, int initialLife)
 		: obj_base(x, y, false, moveSpeed),
 		id(id), 
 		distance(2), 
@@ -25,12 +25,25 @@ public:
 		canPushTnt(false), 
 		haveDefence(false), 
 		isMissing(false), 
-		weapon(NULL) {}
+		weapon(NULL), 
+		isLiving(true), 
+		life(initialLife), 
+		initialLife(initialLife) {}
 
 	virtual objType GetObjType() const override { return objType::role; }
 
-	//重设角色（是否重设分数）
-	void Reset(bool resetScore); 
+	//重设角色（是否重设分数和生命）
+	void Reset(bool resetScore, bool resetLife); 
+
+	//是否存活
+	bool IsLiving() const { return isLiving; }
+
+	//获取生命值
+	int GetLife() const { return life; }
+	//生命加一
+	void AddLife() { ++life; }
+	//生命减一
+	void SubLife() { if(life > 0) --life; }
 	
 	//移动
 	void MoveUp() { Move(direction::Up); }
@@ -97,6 +110,9 @@ private:
 	bool canPushTnt;		//能否推动TNT
 	bool haveDefence;		//是否拥有盾牌防御
 	bool isMissing;			//是否正在处于刚被炸的保护状态
+	bool isLiving;			//是否活着
+	int life;				//生命数
+	const int initialLife;	//初始生命数
 	SpecialBomb* weapon;	//手中持有的武器
 };
 

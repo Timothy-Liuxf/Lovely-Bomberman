@@ -13,9 +13,11 @@ int APIENTRY _tWinMain(_In_ HINSTANCE hInstance,
     UNREFERENCED_PARAMETER(hPrevInstance);
     UNREFERENCED_PARAMETER(lpCmdLine);
     
-    UI mainGameUI; 
+    UI* pMainGameUI = new UI(); 
+    int ret = pMainGameUI->Begin(hInstance, nCmdShow); 
+    delete pMainGameUI; 
 
-    return mainGameUI.Begin(hInstance, nCmdShow); 
+    return ret; 
 }
 
 

@@ -7,12 +7,16 @@
 #include "framework.h"
 #include "resource.h"
 #include "str.h"
-#include "globals.h"
 #include "BasicWindow.h"
 
 //定时器ID
 
 #define TIMER_ID_START 9999					//开始刷新窗口计时器
+
+extern CONST int objSize; 
+extern CONST int propSize; 
+extern CONST POINT mainWndPos; 
+extern CONST POINT mainWndSize; 
 
 class UI final : public BasicWindow
 {
@@ -32,7 +36,8 @@ protected:
 	virtual bool messageProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) override; 
 
 private: 
-	
+
+	//位图句柄，缺省值均为NULL（C++11及以上）
 	HBITMAP hBmMem = NULL;				//用于缓冲
 	HBITMAP hBmBkgnd = NULL;			//背景位图句柄
 	HBITMAP hBmRole = NULL;				//角色位图句柄
@@ -51,6 +56,7 @@ private:
 	HBITMAP hBmGrenade = NULL;			//手榴弹位图句柄
 	HBITMAP hBmMissil = NULL;			//导弹位图句柄
 
+	//（位图信息）
 	BITMAP bmBkgnd;						//背景位图信息
 	BITMAP bmRole;						//角色位图信息
 	BITMAP bmTnt;						//炸弹位图信息
@@ -70,8 +76,8 @@ private:
 
 	LONG capMenuAppendCy;				//标题栏和菜单栏占用的高度
 
-	bool LoadGameImg();						//加载位图
-	void CreateBuffer(HWND hWnd);			//创建缓冲位图
+	bool LoadGameImg();					//加载位图
+	void CreateBuffer(HWND hWnd);		//创建缓冲位图
 
 	//开始画图
 	void Paint(HWND hWnd, BOOL calledByPaintMessage); 

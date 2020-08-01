@@ -43,7 +43,7 @@ public:
 
 private: 
 
-	enum tntState
+	enum class tntState
 	{
 		laid,	//·ÅÖÃ×´Ì¬
 		bomb	//±¬Õ¨×´Ì¬

@@ -1,5 +1,10 @@
 #include "UI.h"
 
+CONST int objSize = 40;
+CONST int propSize = 30;
+CONST POINT mainWndPos = { 0, 0 };
+CONST POINT mainWndSize = { (objSize * 15) + 200, objSize * 13 }; 
+
 int UI::Begin(HINSTANCE hInstance, int nCmdShow)
 {
     //定义窗口样式

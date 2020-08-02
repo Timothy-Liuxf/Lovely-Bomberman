@@ -47,9 +47,9 @@ public:
 	virtual bool IsSpecialBomb() const = 0; 
 
 	//获取道具状态
-	bool isUnpicked() const { return state == propState::unpicked; }
-	bool ispicked() const { return state == propState::picked; }
-	bool isLaid() const { return state == propState::laid; }
+	bool IsUnpicked() const { return state == propState::unpicked; }
+	bool IsPicked() const { return state == propState::picked; }
+	bool IsLaid() const { return state == propState::laid; }
 
 	//捡起道具
 	virtual void SetPicked() { state = propState::picked; }

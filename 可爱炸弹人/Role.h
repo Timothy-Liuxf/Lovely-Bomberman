@@ -21,11 +21,12 @@ public:
 		distance(2), 
 		tntNum(1), 
 		nowTntNum(0), 
-		score(0),
+		nowScore(0),
+		totalScore(0), 
 		canPushTnt(false), 
 		haveDefence(false), 
 		isMissing(false), 
-		weapon(NULL), 
+		weapon(nullptr), 
 		isLiving(true), 
 		life(initialLife), 
 		initialLife(initialLife), 
@@ -33,18 +34,19 @@ public:
 
 	virtual objType GetObjType() const override { return objType::role; }
 
-	//重设角色（是否重设分数和生命）
-	void Reset(bool resetScore, bool resetLife); 
+	//重设角色（是否重设总分和生命）
+	void Reset(bool resetTotalScore, bool resetLife); 
 
 	//是否存活
 	bool IsLiving() const { return isLiving; }
+
+	//受到攻击
+	bool BeAttacked(); 
 
 	//获取生命值
 	int GetLife() const { return life; }
 	//生命加一
 	void AddLife() { ++life; }
-	//生命减一
-	void SubLife() { if(life > 0) --life; }
 	
 	//移动
 	void MoveUp() { Move(direction::Up); }
@@ -75,9 +77,13 @@ public:
 	void AddDistance() { ++distance; }
 
 	//获取分数
-	int GetScore() const { return score; }
+	int GetNowScore() const { return nowScore; }
 	//增加分数
-	void AddScore(int add) { score += add; }
+	void AddNowScore(int add) { nowScore += add; }
+	//获取总分
+	int GetTotalScore() const { return totalScore; }
+	//把当前分数加到总分中并清空当前分数
+	void MergeScore(); 
 
 	//增加移动速度
 	void AddMoveSpeed(); 
@@ -120,9 +126,10 @@ private:
 	int distance;			//炸弹的爆炸范围
 	int tntNum;				//最多可以同时放置的炸弹数
 	int nowTntNum;			//目前已经放置的炸弹数
-	int score;				//分数
-	bool canPushTnt;			//能否推动TNT
-	bool haveDefence;			//是否拥有盾牌防御
+	int nowScore;			//当前分数
+	int totalScore;			//总分数
+	bool canPushTnt;		//能否推动TNT
+	bool haveDefence;		//是否拥有盾牌防御
 	bool isMissing;			//是否正在处于刚被炸的保护状态
 	bool isLiving;			//是否活着
 	int life;				//生命数
@@ -131,6 +138,9 @@ private:
 	direction direct;		//朝向
 
 	void SetDirect(direction newDirect) { direct = newDirect; }
+
+	//生命减一
+	void SubLife() { if (life > 0) --life; }
 };
 
 

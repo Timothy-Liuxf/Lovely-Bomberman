@@ -47,12 +47,13 @@ public:
 		CorrectPos(); 
 	}
 
-	//获取坐标
-	posType GetPos() const { return pos; }
-
+	
 	//设置地图范围——行数和列数以及每个格的边长
 	static void SetMapBound(int rows, int cols, int posUnitPerCell);  
 	
+	//获取坐标
+	posType GetPos() const { return pos; }
+
 	//判断是否在移动
 	bool IsMoving() const { return isMoving; }
 

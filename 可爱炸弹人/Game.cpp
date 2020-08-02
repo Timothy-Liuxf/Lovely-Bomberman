@@ -1,6 +1,8 @@
 #include "Game.h"
 
 const unsigned int Game::numOfMap = 1; 
+const int Game::playerInitialLife = 3;		//玩家初始生命
+const int Game::defPosUnitPerCell = 1024;	//玩每格的长度
 
 const std::vector<std::vector<std::vector<int>>> Game::gameMap
 {

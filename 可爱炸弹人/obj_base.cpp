@@ -1,4 +1,4 @@
-#include "basic.h"
+#include "obj_base.h"
 
 obj_base::posType obj_base::minPos(0, 0); 
 obj_base::posType obj_base::maxPos(0, 0); 
@@ -41,4 +41,27 @@ void obj_base::Move(direction direc)
 		break; 
 	}
 	CorrectPos(); 
+}
+
+void obj_base::MoveLessThanOneStep(direction direc, sigPosType moveDistance)
+{
+	if (moveDistance > moveSpeed) moveDistance = moveSpeed; 
+	switch (direc)
+	{
+	case direction::Null:
+		break;
+	case direction::Up:
+		pos.x -= moveDistance;
+		break;
+	case direction::Down:
+		pos.x += moveDistance;
+		break;
+	case direction::Left:
+		pos.y -= moveDistance;
+		break;
+	case direction::Right:
+		pos.y += moveDistance;
+		break;
+	}
+	CorrectPos();
 }

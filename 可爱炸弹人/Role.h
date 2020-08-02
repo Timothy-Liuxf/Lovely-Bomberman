@@ -28,7 +28,8 @@ public:
 		weapon(NULL), 
 		isLiving(true), 
 		life(initialLife), 
-		initialLife(initialLife) {}
+		initialLife(initialLife), 
+		direct(direction::Down) {}
 
 	virtual objType GetObjType() const override { return objType::role; }
 
@@ -50,6 +51,11 @@ public:
 	void MoveDown() { Move(direction::Down); }
 	void MoveLeft() { Move(direction::Left); }
 	void MoveRight() { Move(direction::Right); }
+	//移动不到一步
+	void MoveUpLessThanOneStep(sigPosType moveDistance) { MoveLessThanOneStep(direction::Up, moveDistance); }
+	void MoveDownLessThanOneStep(sigPosType moveDistance) { MoveLessThanOneStep(direction::Down, moveDistance); }
+	void MoveLeftLessThanOneStep(sigPosType moveDistance) { MoveLessThanOneStep(direction::Left, moveDistance); }
+	void MoveRightLessThanOneStep(sigPosType moveDistance) { MoveLessThanOneStep(direction::Right, moveDistance); }
 
 	//放置TNT
 	bool LayTNT(); 
@@ -97,6 +103,14 @@ public:
 	SpecialBomb* GetWeapon() const { return weapon; }
 	//重设武器
 	void SetWeapon(SpecialBomb* newWeapon) { weapon = newWeapon; }
+
+	//获取方向
+	direction GetDirect() const { return direct; }
+	//改变方向
+	void SetDirectUp() { SetDirect(direction::Up); }
+	void SetDirectDown() { SetDirect(direction::Down); }
+	void SetDirectLeft() { SetDirect(direction::Left); }
+	void SetDirectRight() { SetDirect(direction::Right); }
 	
 	~Role() {}
 
@@ -107,13 +121,16 @@ private:
 	int tntNum;				//最多可以同时放置的炸弹数
 	int nowTntNum;			//目前已经放置的炸弹数
 	int score;				//分数
-	bool canPushTnt;		//能否推动TNT
-	bool haveDefence;		//是否拥有盾牌防御
+	bool canPushTnt;			//能否推动TNT
+	bool haveDefence;			//是否拥有盾牌防御
 	bool isMissing;			//是否正在处于刚被炸的保护状态
 	bool isLiving;			//是否活着
 	int life;				//生命数
 	const int initialLife;	//初始生命数
 	SpecialBomb* weapon;	//手中持有的武器
+	direction direct;		//朝向
+
+	void SetDirect(direction newDirect) { direct = newDirect; }
 };
 
 

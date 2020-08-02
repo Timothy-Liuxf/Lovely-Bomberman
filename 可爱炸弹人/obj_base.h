@@ -3,9 +3,9 @@
 //  一且游戏对象的基类
 //
 
-#ifndef BASIC_H
+#ifndef OBJ_BASE_H
 
-#define BASIC_H
+#define OBJ_BASE_H
 
 #include <mutex>
 
@@ -23,6 +23,7 @@ public:
 
 	enum class objType		//对象类型
 	{
+		null,			//不是任何类型
 		role,			//角色
 		tnt,			//普通炸弹
 		softObstacle,	//软障碍
@@ -30,6 +31,15 @@ public:
 		bombArea,		//爆炸区域
 		prop			//道具
 	}; 
+
+	enum class direction		//方向
+	{
+		Null,
+		Up,
+		Down,
+		Left,
+		Right
+	};
 
 	obj_base(sigPosType x, sigPosType y, bool isMoving, sigPosType moveSpeed) 
 		: pos(x, y), isMoving(isMoving), moveSpeed(moveSpeed) 
@@ -64,16 +74,8 @@ public:
 
 protected:
 
-	enum class direction		//方向
-	{
-		Null, 
-		Up, 
-		Down, 
-		Left, 
-		Right
-	}; 
-
-	void Move(direction direc); 
+	void Move(direction direc);										//移动一步
+	void MoveLessThanOneStep(direction direc, sigPosType moveDistance);	//移动少于1步
 
 	//记录地图左上角和右下角的坐标
 	static posType minPos; 

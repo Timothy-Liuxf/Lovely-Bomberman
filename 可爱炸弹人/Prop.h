@@ -7,7 +7,7 @@
 //  道具
 //
 
-#include "basic.h"
+#include "obj_base.h"
 
 //道具基类
 class Prop : public obj_base
@@ -16,27 +16,35 @@ public:
 
 	enum class propType
 	{
+		null = 0,				//不是任何道具
+
 		//buf类道具
-		glove,		//手套
-		shield,		//盾牌
-		addtnt,		//增加炮弹数
-		addlife,	//增加生命
-		shoe,		//跑鞋
-		jinKeLa,	//金坷垃
-		
+		buffbegin = 1,			//buff类道具开始
+		glove = 2,				//手套
+		shield = 3,				//盾牌
+		addtnt = 4,				//增加炮弹数
+		addlife = 5,			//增加生命
+		shoe = 6,				//跑鞋
+		jinKeLa = 7,			//金坷垃
+		buffend = 8,			//buff类道具结束
+
 		//特殊炸弹类道具
-		lachrymator,//催泪瓦斯
-		mine,		//地雷
-		fire,		//火焰枪
-		ice,		//冰枪
-		grenade, 	//手榴弹
-		missile		//导弹
+		specialbomb = 9,		//特殊类炸弹开始
+		lachrymator = 10,		//催泪瓦斯
+		mine = 11,				//地雷
+		fire = 12,				//火焰枪
+		ice = 13,				//冰枪
+		grenade = 14, 			//手榴弹
+		missile = 15, 			//导弹
+		spacialbombend = 16		//特殊类炸弹结束
 	};
 
 	Prop(sigPosType x, sigPosType y) : obj_base(x, y, false, 0), state(propState::unpicked) {}
 	virtual objType GetObjType() const override { return objType::prop; }
 	//获取道具种类
 	virtual propType GetPropType() const = 0; 
+	virtual bool IsBuff() const = 0; 
+	virtual bool IsSpecialBomb() const = 0; 
 
 	//获取道具状态
 	bool isUnpicked() const { return state == propState::unpicked; }
@@ -66,6 +74,8 @@ class Buff : public Prop
 public: 
 
 	Buff(sigPosType x, sigPosType y) : Prop(x, y) {}
+	virtual bool IsBuff() const { return true; }
+	virtual bool IsSpecialBomb() const { return false; }
 	virtual ~Buff() {}
 };
 
@@ -131,9 +141,15 @@ public:
 
 	SpecialBomb(sigPosType x, sigPosType y) : Prop(x, y), ownerID(0), direct(direction::Null) {}
 
+	virtual bool IsBuff() const { return false; }
+	virtual bool IsSpecialBomb() const { return true; }
+
 	//获取主人ID
 	int GetOwnerID() const { return ownerID; }
 	void SetOwnerID(int newOwnerID) { ownerID = newOwnerID; }
+
+	//放置炸弹
+	void SetLaid(sigPosType x, sigPosType y, direction laidDirect, int newMoveSpeed);
 
 	//按不同方向放置炸弹
 	void SetLaidUp(sigPosType x, sigPosType y, int moveSpeed) { SetLaid(x, y, direction::Up, moveSpeed); }
@@ -147,9 +163,6 @@ public:
 	virtual ~SpecialBomb() {}
 
 protected:
-
-	//放置炸弹
-	virtual void SetLaid(sigPosType x, sigPosType y, direction laidDirect, int newMoveSpeed); 
 
 	int ownerID;		//主人ID
 	direction direct;	//发射朝向
@@ -210,67 +223,51 @@ private:
 class Fire final : public SpecialBomb
 {
 public:
-	Fire(sigPosType x, sigPosType y, int timeLeft) : SpecialBomb(x, y), timeLeft(timeLeft) {}
+	Fire(sigPosType x, sigPosType y) : SpecialBomb(x, y) {}
 	virtual propType GetPropType() const override { return propType::fire; }
 
-	int GetTimeLeft() const { return timeLeft; }
-	void SubTimeLeft(int subTime) { timeLeft -= subTime; }
-
 	//检查火焰是否要消失了
-	virtual bool AboutToDisappear() const override { return timeLeft <= 0; }
+	virtual bool AboutToDisappear() const override { return false; }
 
 	virtual ~Fire() {}
-private:
-	int timeLeft;	//火焰剩余的存在时间
+
 };
 
 //寒冰枪
 class Ice final : public SpecialBomb
 {
 public:
-	Ice(sigPosType x, sigPosType y, int timeLeft) : SpecialBomb(x, y), timeLeft(timeLeft) {}
+	Ice(sigPosType x, sigPosType y) : SpecialBomb(x, y) {}
 	virtual propType GetPropType() const override { return propType::mine; }
 
-	int GetTimeLeft() const { return timeLeft; }
-	void SubTimeLeft(int subTime) { timeLeft -= subTime; }
-
 	//检查冰是否要消失了
-	virtual bool AboutToDisappear() const override { return timeLeft <= 0; }
+	virtual bool AboutToDisappear() const override { return false; }
 
 	virtual ~Ice() {}
 
-private:
-
-	int timeLeft; 		//距离寒冰消失的时间
 };
 
 //手榴弹
 class Grenade final : public SpecialBomb
 {
 public: 
-	Grenade(sigPosType x, sigPosType y, sigPosType maxDistance, int maxTimeLeft) : SpecialBomb(x, y), leftDistance(maxDistance), timeLeft(maxTimeLeft) {}
+	Grenade(sigPosType x, sigPosType y, sigPosType maxDistance) : SpecialBomb(x, y), leftDistance(maxDistance) {}
 	virtual propType GetPropType() const override { return propType::grenade; }
 	
 	sigPosType GetLeftDistance() const { return leftDistance; }
 
 	//检查手榴弹是否要爆炸了
-	bool AboutToBomb() const { return leftDistance <= 0; }
-
-	//检查手榴弹是否要消失了
-	virtual bool AboutToDisappear() const override { return timeLeft <= 0; }
+	virtual bool AboutToDisappear() const override { return leftDistance <= 0; }
 
 	//手榴弹移动
 	void Move(); 
-
-	//减少时间
-	void SubTimeLeft(int sub) { timeLeft -= sub; }
 
 	virtual ~Grenade() {}
 
 private: 
 
 	sigPosType leftDistance;		//剩余可以行进的距离
-	int timeLeft;					//爆炸后距离消失的时间
+
 }; 
 
 //导弹

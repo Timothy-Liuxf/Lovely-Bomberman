@@ -3,7 +3,7 @@
 const unsigned int Game::numOfLevel = 1; 
 const int Game::playerInitialLife = 3;		//玩家初始生命
 const int Game::defPosUnitPerCell = 1024;	//玩每格的长度
-const int Game::roleInitialMoveSpeed = 20;	//玩家初始移动速度
+const int Game::roleInitialMoveSpeed = 32;	//玩家初始移动速度
 
 const std::vector<std::vector<std::vector<int>>> Game::gameMap
 {
@@ -29,7 +29,7 @@ const std::vector<std::vector<int>>& Game::GetGameMap(unsigned int num) const
 	return gameMap[num % numOfLevel]; 
 }
 
-Game::Game(int numOfPlayer, int id1, int id2) : numOfPlayer(numOfPlayer), id1(id1), id2(id2)
+Game::Game(int numOfPlayer, int id1, int id2) : numOfPlayer(numOfPlayer), id1(id1), id2(id2), nowLevel(0)
 {
 	int rows = gameMap[0].size(), cols = gameMap[0][0].size(); 
 	roles.resize(5, nullptr); 
@@ -64,6 +64,7 @@ Game::~Game()
 
 void Game::InitNewLevel(int newLevel, bool mergeScore)
 {
+	nowLevel = newLevel; 
 	for (int i = 1; i <= 4; ++i)
 	{
 		//是玩家
@@ -115,3 +116,96 @@ std::list<obj_base*> Game::GetMapObj(int x, int y) const
 	}
 	return res; 
 }
+
+void Game::WalkOneCell(int roleID, direction direct)
+{
+	Role* pRole = roles[roleID]; 
+	if (!pRole->IsLiving()) return;											//人死了不能行走
+	auto x0 = roles[roleID]->GetPos().x, y0 = roles[roleID]->GetPos().y;	//获取角色位置
+	auto x = x0, y = y0; 
+	int xc = PosToCell(x0), yc = PosToCell(y0); 
+	std::function<int(void)> leftDistance = nullptr;						//行走剩余距离
+	std::function<void(void)> walk = nullptr, walkHalf = nullptr;			//行走
+	std::list<obj_base*> mapObjList; 
+	switch (direct)
+	{
+	case direction::Up:
+	{
+		//设置朝向
+		pRole->GetMutex().lock(); pRole->SetDirectUp(); pRole->GetMutex().unlock();
+		if (xc <= 0) return;			//已经到达边界
+		mapObjList = GetMapObj(xc - 1, yc);
+		leftDistance = [&x0, &y0, &x, &y]() { return x - (x0 - defPosUnitPerCell); };
+		walk = [pRole]() { pRole->MoveUp(); };
+		walkHalf = [pRole, &leftDistance] { pRole->MoveUpLessThanOneStep(leftDistance()); };
+		break;
+	}
+	case direction::Down: 
+	{
+		//设置朝向
+		pRole->GetMutex().lock(); pRole->SetDirectDown(); pRole->GetMutex().unlock();
+		if (xc >= (obj_base::sigPosType)gameMap[nowLevel].size() - 1) return;			//已经到达边界
+		mapObjList = GetMapObj(xc + 1, yc);
+		leftDistance = [&x0, &y0, &x, &y]() { return x0 + defPosUnitPerCell - x; };
+		walk = [pRole]() { pRole->MoveDown(); };
+		walkHalf = [pRole, &leftDistance] { pRole->MoveDownLessThanOneStep(leftDistance()); };
+		break;
+	}
+	case direction::Left:
+	{
+		//设置朝向
+		pRole->GetMutex().lock(); pRole->SetDirectLeft(); pRole->GetMutex().unlock();
+		if (yc <= 0) return;			//已经到达边界
+		mapObjList = GetMapObj(xc, yc - 1);
+		leftDistance = [&x0, &y0, &x, &y]() { return y - (y0 - defPosUnitPerCell); };
+		walk = [pRole]() { pRole->MoveLeft(); };
+		walkHalf = [pRole, &leftDistance] { pRole->MoveLeftLessThanOneStep(leftDistance()); };
+		break;
+	}
+	case direction::Right:
+	{
+		//设置朝向
+		pRole->GetMutex().lock(); pRole->SetDirectRight(); pRole->GetMutex().unlock();
+		if (yc >= (obj_base::sigPosType)gameMap[nowLevel][0].size() - 1) return;			//已经到达边界
+		mapObjList = GetMapObj(xc, yc + 1);
+		leftDistance = [&x0, &y0, &x, &y]() { return y0 + defPosUnitPerCell - y; };
+		walk = [pRole]() { pRole->MoveRight(); };
+		walkHalf = [pRole, &leftDistance] { pRole->MoveRightLessThanOneStep(leftDistance()); };
+		break;
+	}
+	}
+
+	//检查是否有障碍
+	for (auto pObj : mapObjList)
+	{
+		switch (pObj->GetObjType())
+		{
+		case obj_base::objType::hardObstacle:
+		case obj_base::objType::softObstacle:
+			return;							//碰到障碍不能走
+		case obj_base::objType::tnt:		//碰到炸弹
+		{
+			TNT* pTnt = dynamic_cast<TNT*>(pObj);
+			if (pRole->CanPushTnt() && !pTnt->IsMoving())
+			{
+				//是否能推动炸弹
+				if (!MoveTnt(pTnt, direct)) return;	//不能推动炸弹，不能行走
+			}
+			break;
+		}
+		}
+	}
+
+	//行走一格
+	while (leftDistance() > 0)
+	{
+		pRole->GetMutex().lock();
+		if (leftDistance() >= pRole->GetMoveSpeed()) walk();
+		else walkHalf();
+		pRole->GetMutex().unlock();
+		std::this_thread::sleep_for(std::chrono::milliseconds(1000 / GAME_FPS));
+		x = pRole->GetPos().x; y = pRole->GetPos().y; 
+	}
+
+}
+

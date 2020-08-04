@@ -29,7 +29,7 @@ public:
 		buffend = 8,			//buff类道具结束
 
 		//特殊炸弹类道具
-		specialbomb = 9,		//特殊类炸弹开始
+		specialbombbegin = 9,	//特殊类炸弹开始
 		lachrymator = 10,		//催泪瓦斯
 		mine = 11,				//地雷
 		fire = 12,				//火焰枪

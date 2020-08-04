@@ -73,8 +73,12 @@ list<const obj_base*> GetMapObj(x, y)		//获取地图上某点的所有物件
 WalkOne(int roleID) * 4	//Up, Down, Left, Right
 {
 	if (canWalk) for (walk one cell);  
+	if (能推动炸弹) 同步调用推动炸弹函数
 	else return; 
 }
+
+bool MoveTnt(); 	//推动炸弹
+
 LayTnt(int roleID)
 {
 	if (cannotLayTnt: Obstacle、other tnts) return; 

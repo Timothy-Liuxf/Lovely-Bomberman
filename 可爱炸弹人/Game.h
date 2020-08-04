@@ -4,9 +4,18 @@
 
 #include "Role.h"
 #include "Obstacle.h"
+#include "TNT.h"
+#include "BombArea.h"
 #include <list>
 #include <vector>
+#include <thread>
 #include <functional>
+
+#ifdef _DEBUG
+#include <iostream>
+#endif
+
+#define GAME_FPS 50		//游戏帧数
 
 class Game
 {
@@ -37,7 +46,9 @@ public:
 	~Game(); 
 
 private: 
-	
+
+	using direction = obj_base::direction; 
+
 	enum class mapItem
 	{
 		blank = 0,			//空格
@@ -56,10 +67,15 @@ private:
 	int numOfPlayer;		//游戏人数
 	int id1;				//1P的ID
 	int id2;				//2P的ID（如果有的话）
+	int nowLevel;			//当前关
 	
 	//游戏地图
 	static const std::vector<std::vector<std::vector<int>>> gameMap; 
 	static const unsigned int numOfLevel; 
+
+	//游戏行为
+	void WalkOneCell(int roleID, direction direct);		//行走一格
+	bool MoveTnt(TNT* pTnt, direction direct);			//推动炸弹
 };
 
 #endif	//#ifndef GAME_H

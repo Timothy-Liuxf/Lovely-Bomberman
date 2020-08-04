@@ -54,13 +54,12 @@ public:
 	//获取坐标
 	posType GetPos() const { return pos; }
 
+	//获取范围
+	posType GetMinPos() const { return minPos; }
+	posType GetMaxPos() const { return maxPos; }
+
 	//判断是否在移动
 	bool IsMoving() const { return isMoving; }
-
-	//设置为移动状态
-	void SetMoving() { isMoving = true; }
-	//设置为不移动状态
-	void SetNoMoving() { isMoving = false; }
 
 	//获取移动速度
 	sigPosType GetMoveSpeed() const { return moveSpeed; }

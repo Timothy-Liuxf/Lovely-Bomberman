@@ -1,6 +1,6 @@
 #include "Prop.h"
 
-void SpecialBomb::SetLaid(sigPosType x, sigPosType y, direction laidDirect, int newMoveSpeed)
+void SpecialBomb::SetLaid(sigPosType x, sigPosType y, direction laidDirect, sigPosType newMoveSpeed)
 {
 	pos = posType(x, y); 
 	state = propState::laid; 

@@ -6,7 +6,7 @@ void Role::Reset(bool resetTotalScore, bool resetLife)
 	tntNum = 1; 
 	nowTntNum = 0; 
 	canPushTnt = false; 
-	haveDefence = false; 
+	haveShield = false; 
 	isMissing = false; 
 	weapon = NULL; 
 	nowScore = 0; 
@@ -19,10 +19,10 @@ void Role::Reset(bool resetTotalScore, bool resetLife)
 bool Role::BeAttacked()
 {
 	if (!isLiving || isMissing) return false; 
-	if (haveDefence)
+	if (haveShield)
 	{
-		haveDefence = false; 
-		return false; 
+		haveShield = false; 
+		return true; 
 	}
 	//±»»÷ÖÐ
 	isLiving = false; 
@@ -40,7 +40,6 @@ bool Role::LayTNT()
 void Role::TNTBomb()
 {
 	if (nowTntNum > 0) --nowTntNum; 
-	else throw 1; 
 }
 
 void Role::AddMoveSpeed()
@@ -60,3 +59,10 @@ void Role::MergeScore()
 	totalScore += nowScore; 
 	nowScore = 0; 
 }
+
+Role::~Role()
+{
+	delete weapon; 
+	weapon = nullptr; 
+}
+

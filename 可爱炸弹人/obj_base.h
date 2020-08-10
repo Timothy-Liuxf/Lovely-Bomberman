@@ -49,7 +49,7 @@ public:
 
 	
 	//设置地图范围——行数和列数以及每个格的边长
-	static void SetMapBound(int rows, int cols, int posUnitPerCell);  
+	static void SetMapBound(int rows, int cols, obj_base::sigPosType posUnitPerCell);
 	
 	//获取坐标
 	posType GetPos() const { return pos; }
@@ -80,9 +80,9 @@ protected:
 	//记录地图左上角和右下角的坐标
 	static posType minPos; 
 	static posType maxPos; 
-	static const sigPosType EPS; //坐标精度
-	static int posUnitPerCell;	//每个格子的边长
-	void CorrectPos();		//修正坐标，放置越界
+	static const sigPosType EPS;				//坐标精度
+	static obj_base::sigPosType posUnitPerCell;	//每个格子的边长
+	void CorrectPos();						//修正坐标，放置越界
 
 
 	posType pos;			//位置坐标

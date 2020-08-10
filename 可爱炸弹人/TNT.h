@@ -36,6 +36,12 @@ public:
 	void SetMoveLeft() { SetMove(direction::Left); }
 	void SetMoveRight() { SetMove(direction::Right); }
 
+	//移动
+	void Move() { obj_base::Move(direct); }
+
+	//获取移动方向
+	direction GetDirect() const { return direct; }
+
 	virtual ~TNT() {}
 
 private: 

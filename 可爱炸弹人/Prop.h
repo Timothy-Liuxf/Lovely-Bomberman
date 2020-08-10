@@ -36,7 +36,7 @@ public:
 		ice = 13,				//冰枪
 		grenade = 14, 			//手榴弹
 		missile = 15, 			//导弹
-		spacialbombend = 16		//特殊类炸弹结束
+		specialbombend = 16		//特殊类炸弹结束
 	};
 
 	Prop(sigPosType x, sigPosType y) : obj_base(x, y, false, 0), state(propState::unpicked) {}
@@ -51,9 +51,6 @@ public:
 	bool IsPicked() const { return state == propState::picked; }
 	bool IsLaid() const { return state == propState::laid; }
 
-	//捡起道具
-	virtual void SetPicked() { state = propState::picked; }
-	
 	virtual ~Prop() {}
 
 protected: 
@@ -148,14 +145,20 @@ public:
 	int GetOwnerID() const { return ownerID; }
 	void SetOwnerID(int newOwnerID) { ownerID = newOwnerID; }
 
+	//捡起道具
+	void SetPicked(int newOwnerID) { state = propState::picked; ownerID = newOwnerID; }
+
 	//放置炸弹
-	void SetLaid(sigPosType x, sigPosType y, direction laidDirect, int newMoveSpeed);
+	void SetLaid(sigPosType x, sigPosType y, direction laidDirect, sigPosType newMoveSpeed);
 
 	//按不同方向放置炸弹
-	void SetLaidUp(sigPosType x, sigPosType y, int moveSpeed) { SetLaid(x, y, direction::Up, moveSpeed); }
-	void SetLaidDown(sigPosType x, sigPosType y, int moveSpeed) { SetLaid(x, y, direction::Down, moveSpeed); }
-	void SetLaidLeft(sigPosType x, sigPosType y, int moveSpeed) { SetLaid(x, y, direction::Left, moveSpeed); }
-	void SetLaidRight(sigPosType x, sigPosType y, int moveSpeed) { SetLaid(x, y, direction::Right, moveSpeed); }
+	void SetLaidUp(sigPosType x, sigPosType y, sigPosType moveSpeed) { SetLaid(x, y, direction::Up, moveSpeed); }
+	void SetLaidDown(sigPosType x, sigPosType y, sigPosType moveSpeed) { SetLaid(x, y, direction::Down, moveSpeed); }
+	void SetLaidLeft(sigPosType x, sigPosType y, sigPosType moveSpeed) { SetLaid(x, y, direction::Left, moveSpeed); }
+	void SetLaidRight(sigPosType x, sigPosType y, sigPosType moveSpeed) { SetLaid(x, y, direction::Right, moveSpeed); }
+
+	//获取方向
+	direction GetDirection() const { return direct; }
 
 	//检查是否要消失了
 	virtual bool AboutToDisappear() const = 0; 
@@ -271,17 +274,17 @@ private:
 }; 
 
 //导弹
-class Missil final : public SpecialBomb
+class Missile final : public SpecialBomb
 {
 public: 
-	Missil(sigPosType x, sigPosType y) : SpecialBomb(x, y) {}
-
+	Missile(sigPosType x, sigPosType y) : SpecialBomb(x, y) {}
+	virtual propType GetPropType() const override { return propType::missile; }
 	//导弹移动
 	void Move() { obj_base::Move(direct); }
 
 	virtual bool AboutToDisappear() const override { return false; }
 
-	virtual ~Missil() {}
+	virtual ~Missile() {}
 };
 
 #endif // #ifndef PROP_H

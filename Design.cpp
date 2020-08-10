@@ -51,7 +51,7 @@ scanData()
 	while (isGaming)
 	{
 		同步调用检查人物：Game::checkRole； 
-		同步调用检查炸弹和特殊武器 Game::checkTnt; 
+		同步调用检查炸弹和特殊武器 Game::checkBomb; 
 		同步调用检查游戏是否结束 Game::CheckGameEnd; 
 		Sleep(数据帧); 
 	}
@@ -59,27 +59,26 @@ scanData()
 
 class Game: 
 
-public: 
+Game(int numOfRole) 		//Construct function, OK
+{ InitRole; }
 
-Game(int numOfRole); 		//Construct function
-
-list<const obj_base*> GetMapObj(x, y)		//获取地图上某点的所有物件
+list<const obj_base*> GetMapObj(x, y)		//获取地图上某点的所有物件, OK
 {
 	for (遍历角色) if (活着) list.push
 	for (遍历其它物件) if (没有被人拿起来) list.push
 	return list; 
 }
 
-WalkOne(int roleID) * 4	//Up, Down, Left, Right
+public WalkOne(int roleID) * 4	//Up, Down, Left, Right, OK
 {
 	if (canWalk) for (walk one cell);  
 	if (能推动炸弹) 同步调用推动炸弹函数
 	else return; 
 }
 
-bool MoveTnt(); 	//推动炸弹
+private bool MoveTnt(); 	//推动炸弹, OK
 
-LayTnt(int roleID)
+public LayTnt(int roleID)		//放置炸弹, ok
 {
 	if (cannotLayTnt: Obstacle、other tnts) return; 
 	for (检查角色的道具): if (haveSpecialBomb) 
@@ -91,29 +90,29 @@ LayTnt(int roleID)
 	if (haveNoTnt) return; 
 	layTnt: Role's num of Tnt--, lay tnt at role's pos; 
 }
-checkRole()
+checkRole()			//检查角色，ok
 {
 	for (遍历角色)
 	{
 		if (die) continue; 
-		if (所在格子有道具) 捡起道具，触发道具效果; 
+		if (所在格子有道具) 捡起道具，触发道具效果（特殊武器需要在地图上移除，原有武器须托管到回收站）; 
 	}
 }
-checkTnt()
+checkBomb()			//检查炸弹和爆炸区域------------------------------unfinished
 {
 	for (遍历地图中的物件) 得到指针，dynamic_cast<>
 	if(是道具并且未捡起) continue; 
 	switch(指针指向的对象)
 	{
 	case TNT: 
-		if (没有在移动)
+		if (在移动)
 		{
-			if (即将爆炸但还没有爆炸) 同步执行BombTnt(TNT*); 
-			else --timeLeft; 
+			检测碰撞，如果碰撞，BombTnt，否则move(); 
 		}
 		else
 		{
-			检测碰撞，如果碰撞，BombTnt，否则move(); 
+			if (即将爆炸但还没有爆炸) 同步执行BombTnt(TNT*); 
+			else --timeLeft; 
 		}
 		break; 
 	case 地雷: 
@@ -134,6 +133,12 @@ checkTnt()
 		if (即将爆炸) { Bomb手榴弹(); }
 		else (不爆炸) move(); 
 		break; 
+	case 火焰弹: 
+		直接炸掉
+		break; 
+	case 冰: 
+		直接炸掉
+		break; 
 	case 导弹: 
 		if (碰撞) { BombMapCell(ownerID, x, y); 放入回收站; }
 		else move(); break; 
@@ -146,12 +151,12 @@ checkTnt()
  
 private: 
 
-BombTNT(tnt*)
+BombTNT(tnt*)		//ok
 {
 	给主人加子弹、加入爆炸范围、炸掉障碍物、放入回收站等
 }
 
-BombFire(fire*)	//火焰弹刚爆炸
+BombFire(fire*)	//火焰弹刚爆炸,ok
 {
 	录入爆炸范围、炸掉障碍物、放入回收站
 }
@@ -159,4 +164,6 @@ BombFire(fire*)	//火焰弹刚爆炸
 Bomb手榴弹(手榴弹*)
 {录入爆炸范围、炸掉障碍物}
 
-BombMapCell(ownerID, x, y); //爆破地图的一块
+BombMapCell(ownerID, x, y); //爆破地图的一块, ok
+
+RoleMiss(int roleID); 	//角色受伤后的保护状态,ok

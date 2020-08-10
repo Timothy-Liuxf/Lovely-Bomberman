@@ -3,9 +3,9 @@
 obj_base::posType obj_base::minPos(0, 0); 
 obj_base::posType obj_base::maxPos(0, 0); 
 const obj_base::sigPosType obj_base::EPS = 1; 
-int obj_base::posUnitPerCell = 0; 
+obj_base::sigPosType obj_base::posUnitPerCell = 0;
 
-void obj_base::SetMapBound(int rows, int cols, int posUnitPerCell)
+void obj_base::SetMapBound(int rows, int cols, obj_base::sigPosType posUnitPerCell)
 {
 	minPos.x = minPos.y = 0; 
 	maxPos.x = rows * posUnitPerCell; 

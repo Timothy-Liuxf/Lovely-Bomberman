@@ -33,6 +33,7 @@ private:
 	static const int tntBombAreaTime;						//炸弹的爆炸区域存留时间
 	static const int mineInitialTime;						//炸弹和催泪瓦斯初始存留时间
 	static const int grenadeMaxDistance;					//手榴弹移动距离
+	static const int grenadeInitialTime;					//手榴弹爆炸持续时间
 	static const int fireMaxDistance;						//火焰枪攻击距离
 	static const int fireInitialTime;						//火焰枪火焰持续时间
 	static const int scoreOfDestroyObstacle;				//摧毁障碍物得分
@@ -52,12 +53,16 @@ public:
 
 	const std::vector<std::vector<int>>& GetGameMap(unsigned int num) const; 
 	std::list<obj_base*> GetMapObj(int x, int y) const; 
+	int GetID1() const { return id1; }
+	int GetID2() const { return id2; }
+	int GetNowLevel() const { return nowLevel; }
+	static int GetPosUnitPerCell() { return defPosUnitPerCell; }
 	//////const std::vector<Role*>& GetRoles() const { return roles; }
 	//////const std::list<Obstacle*>& GetObstacles() const { return obstacles; }
 	//////const std::list<obj_base*>& GetOtherGameObjs() const { return otherGameObjs; }
 
 	int GetNumOfPlayer() const { return numOfPlayer; }
-	int GetNumOfLevel() const { return numOfLevel; }
+	int GetNumOfLevel() const { return (int)gameMap.size(); }
 
 	//开始新的一关
 	void InitNewLevel(int newLevel, bool mergeScore); 
@@ -79,6 +84,8 @@ public:
 	void CheckRole(); 
 	//检查炸弹以及爆炸区域，多重锁
 	void CheckBomb(int dataScanInterval);
+	//检查游戏是否结束
+	bool CheckGameEnd() const; 
 
 	~Game(); 
 
@@ -113,13 +120,14 @@ private:
 	
 	//游戏地图
 	static const std::vector<std::vector<std::vector<int>>> gameMap; 
-	static const unsigned int numOfLevel; 
 
 	//游戏行为
 	void WalkOneCell(int roleID, direction direct, int stepInterval);		//行走一格
 	bool MoveTnt(TNT* pTnt, direction direct);								//推动炸弹
 	void BombTnt(TNT* pTnt);												//使该炸弹爆炸
-	void BombFire(Fire* pFire);														//使该火焰枪爆炸
+	void BombFire(Fire* pFire);												//使该火焰枪爆炸
+	void BombGrenade(Grenade* pGrenade);									//使该手榴弹爆炸
+	void BombMissile(Missile* pMissile);						//导弹爆炸
 	void BombMapCell(BombArea* pBombArea);									//爆破地图的一块
 	void RoleMiss(Role *pRole); 											//管理角色受伤后的保护状态
 	void CreateProp(int xc, int yc);										//在该点产生道具

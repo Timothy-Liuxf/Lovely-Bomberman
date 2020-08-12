@@ -20,7 +20,7 @@ GamePause();
 
 GameContinue(); 
 
-GameEnd(); 
+EndGame(); 
 
 refreshScreen()
 {
@@ -98,7 +98,7 @@ checkRole()			//检查角色，ok
 		if (所在格子有道具) 捡起道具，触发道具效果（特殊武器需要在地图上移除，原有武器须托管到回收站）; 
 	}
 }
-checkBomb()			//检查炸弹和爆炸区域------------------------------unfinished
+checkBomb()			//检查炸弹和爆炸区域,ok
 {
 	for (遍历地图中的物件) 得到指针，dynamic_cast<>
 	if(是道具并且未捡起) continue; 
@@ -129,15 +129,15 @@ checkBomb()			//检查炸弹和爆炸区域------------------------------unfinis
 			所有人减速，放入回收站；
 		}
 		--timeLeft; break; 
-	case 手榴弹: 
-		if (即将爆炸) { Bomb手榴弹(); }
-		else (不爆炸) move(); 
-		break; 
 	case 火焰弹: 
 		直接炸掉
 		break; 
 	case 冰: 
 		直接炸掉
+		break; 
+	case 手榴弹: 
+		if (即将爆炸) { Bomb手榴弹(); }
+		else (不爆炸) move(); 
 		break; 
 	case 导弹: 
 		if (碰撞) { BombMapCell(ownerID, x, y); 放入回收站; }
@@ -148,6 +148,8 @@ checkBomb()			//检查炸弹和爆炸区域------------------------------unfinis
 		break; 
 	}
 }
+
+bool CheckGameEnd() const; //检查游戏是否结束,ok
  
 private: 
 

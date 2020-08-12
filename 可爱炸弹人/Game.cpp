@@ -1,6 +1,5 @@
 #include "Game.h"
 
-const unsigned int Game::numOfLevel = 1; 
 const int Game::playerInitialLife = 3;						//玩家初始生命
 const int Game::playerMissingTime = 2500;					//玩家受到攻击后的受保护时间
 const obj_base::sigPosType Game::defPosUnitPerCell = 1024;	//玩每格的长度
@@ -11,6 +10,7 @@ const int Game::tntInitialTime = 3000;						//炸弹初始爆炸时间
 const int Game::tntBombAreaTime = 2000;						//炸弹的爆炸区域存留时间
 const int Game::mineInitialTime = 10000;					//炸弹和催泪瓦斯初始存留时间
 const int Game::grenadeMaxDistance = 2;						//手榴弹移动距离
+const int Game::grenadeInitialTime = 500;					//手榴弹爆炸持续时间
 const int Game::fireMaxDistance = 3;						//火焰枪攻击距离
 const int Game::fireInitialTime = 3000;						//火焰枪火焰持续时间
 const int Game::scoreOfDestroyObstacle = 1;					//摧毁障碍物得分
@@ -68,7 +68,7 @@ const std::vector<std::vector<std::vector<int>>> Game::gameMap
 
 const std::vector<std::vector<int>>& Game::GetGameMap(unsigned int num) const
 {
-	return gameMap[num % numOfLevel]; 
+	return gameMap[num % (int)gameMap.size()];
 }
 
 Game::Game(int numOfPlayer, int id1, int id2) : numOfPlayer(numOfPlayer), id1(id1), id2(id2), nowLevel(0)
@@ -114,6 +114,7 @@ void Game::InitNewLevel(int newLevel, bool mergeScore)
 		delete p;
 	deletedObjs.clear();
 
+	newLevel %= (int)gameMap.size();
 	nowLevel = newLevel; 
 	for (int i = 1; i <= 4; ++i)
 	{
@@ -562,8 +563,7 @@ void Game::CheckBomb(int dataScanInterval)
 					{
 						if (pMapObj->GetObjType() == obj_base::objType::role && dynamic_cast<Role*>(pMapObj)->GetID() != pSpecialBomb->GetOwnerID())
 						{
-							active = true;
-							break;
+							active = true; break;
 						}
 					}
 					if (active)
@@ -653,17 +653,98 @@ void Game::CheckBomb(int dataScanInterval)
 			}
 			case Prop::propType::fire:						//火焰枪，直接爆炸
 			{
-				otherGameObjsMutex.lock();
-				auto itr = std::find(otherGameObjs.begin(), otherGameObjs.end(), pSpecialBomb);
-				if (itr != otherGameObjs.end()) otherGameObjs.erase(itr);
-				otherGameObjsMutex.unlock();
-				BombFire(dynamic_cast<Fire*>(pSpecialBomb)); 
-				deletedObjsMutex.lock(); deletedObjs.push_back(pSpecialBomb); deletedObjsMutex.unlock();
-				break;
+				BombFire(dynamic_cast<Fire*>(pSpecialBomb)); break;
+			}
+			case Prop::propType::grenade:					//手榴弹
+			{
+				if (pSpecialBomb->AboutToDisappear()) BombGrenade(dynamic_cast<Grenade*>(pSpecialBomb));
+				else dynamic_cast<Grenade*>(pSpecialBomb)->Move(); 
+				break; 
+			}
+			case Prop::propType::missile:					//导弹
+			{
+				//检查到达边界
+				int rows = (int)gameMap[nowLevel].size(), cols = (int)gameMap[nowLevel][0].size(); 
+				bool arriveBorder = false; 
+				Missile* pMissile = dynamic_cast<Missile*>(pSpecialBomb); 
+				int newXc = xc, newYc = yc; 
+				switch (pMissile->GetDirection())
+				{
+				case obj_base::direction::Up:
+					if (xc <= 0) arriveBorder = true; 
+					newXc = xc - 1; 
+					break; 
+				case obj_base::direction::Down:
+					if (xc >= rows - 1) arriveBorder = true; 
+					newXc = xc + 1; 
+					break;
+				case obj_base::direction::Left:
+					if (yc <= 0) arriveBorder = true; 
+					newYc = yc - 1; 
+					break;
+				case obj_base::direction::Right:
+					if (yc >= cols - 1) arriveBorder = true; 
+					newYc = yc + 1; 
+					break;
+				}
+				if (arriveBorder)
+				{
+					//炸掉这一格
+					BombArea* pBombArea = new BombArea(CellToPos(xc), CellToPos(yc), pMissile->GetOwnerID(), Prop::propType::missile, 500);
+					BombMapCell(pBombArea); delete pBombArea;
+					BombMissile(pMissile);
+				}
+				else
+				{
+					bool willBomb = false;
+					std::list<obj_base*> mapObjList = GetMapObj(newXc, newYc);
+					for (auto pMapObj : mapObjList)
+					{
+						switch (pMapObj->GetObjType())
+						{
+						case obj_base::objType::tnt:
+						case obj_base::objType::role:
+						case obj_base::objType::softObstacle:
+						case obj_base::objType::hardObstacle:
+						{
+							willBomb = true;
+							break;
+						}
+						}
+						if (willBomb) break; 
+					}
+					if (willBomb)
+					{
+						//炸掉这一格
+						BombArea* pBombArea = new BombArea(CellToPos(newXc), CellToPos(newYc), pMissile->GetOwnerID(), Prop::propType::missile, 500);
+						BombMapCell(pBombArea); delete pBombArea;
+						BombMissile(pMissile);
+					}
+					else pMissile->Move();
+				}
+				break; 
 			}
 			}
 		}
 	}
+}
+
+bool Game::CheckGameEnd() const
+{
+
+	bool playerWin = true; 
+	//如果玩家赢了
+	for (int i = 1; i <= 4; ++i)
+	{
+		if (i == id1 || numOfPlayer == 2 && i == id2) continue; 
+		if (roles[i]->IsLiving()) { playerWin = false; break; }
+	}
+
+	if (playerWin) return true; 
+
+	//如果电脑赢了
+	if (roles[id1]->IsLiving() || numOfPlayer == 2 && roles[id2]->IsLiving()) return false; 
+	return true; 
 }
 
 void Game::BombTnt(TNT* pTnt)
@@ -675,10 +756,12 @@ void Game::BombTnt(TNT* pTnt)
 	{
 		return (xc >= 0) && (yc >= 0) && (xc < rols) && (yc < cols); 
 	}; 
+
 	otherGameObjsMutex.lock();		//锁定列表，从列表中移除TNT
 	auto itr = std::find(otherGameObjs.begin(), otherGameObjs.end(), pTnt); 
 	if (itr != otherGameObjs.end()) otherGameObjs.erase(itr); 
 	otherGameObjsMutex.unlock();	//解锁列表
+
 	int distance = pTnt->GetDistance(); 
 	auto [x, y] = pTnt->GetPos(); 
 	auto xc = PosToCell(x), yc = PosToCell(y); 
@@ -707,6 +790,7 @@ void Game::BombTnt(TNT* pTnt)
 				if (beBlocked) break; 
 			}
 			if (beBlocked) break; 
+			pBombAreas.push_back(new BombArea(CellToPos(newXc), CellToPos(newYc), pTnt->GetOwnerID(), Prop::propType::null, tntBombAreaTime)); 
 		}
 	}
 
@@ -729,6 +813,12 @@ void Game::BombTnt(TNT* pTnt)
 
 void Game::BombFire(Fire* pFire)
 {
+	//从列表中移除
+	otherGameObjsMutex.lock();
+	auto itr = std::find(otherGameObjs.begin(), otherGameObjs.end(), pFire);
+	if (itr != otherGameObjs.end()) otherGameObjs.erase(itr);
+	otherGameObjsMutex.unlock();
+
 	auto [x, y] = pFire->GetPos(); 
 	auto xc = PosToCell(x), yc = PosToCell(y); 
 	int rols = (int)gameMap[nowLevel].size(), cols = (int)gameMap[nowLevel][0].size();
@@ -796,7 +886,70 @@ void Game::BombFire(Fire* pFire)
 	otherGameObjsMutex.lock();
 	for (auto pBombArea : pBombAreas)
 		otherGameObjs.push_back(pBombArea);
+	otherGameObjsMutex.unlock(); 
+
+	//把火焰枪放入回收站
+	deletedObjsMutex.lock(); deletedObjs.push_back(pFire); deletedObjsMutex.unlock(); 
+}
+
+void Game::BombGrenade(Grenade* pGrenade)
+{
+	int rols = (int)gameMap[nowLevel].size(), cols = (int)gameMap[nowLevel][0].size();
+	std::function<bool(int, int)> InRange = [rols, cols](int xc, int yc)
+	{
+		return (xc >= 0) && (yc >= 0) && (xc < rols) && (yc < cols);
+	};
+
+	otherGameObjsMutex.lock();		//锁定列表，从列表中移除手榴弹
+	auto itr = std::find(otherGameObjs.begin(), otherGameObjs.end(), pGrenade);
+	if (itr != otherGameObjs.end()) otherGameObjs.erase(itr);
+	otherGameObjsMutex.unlock();	//解锁列表
+
+	auto [x, y] = pGrenade->GetPos();
+	auto xc = PosToCell(x), yc = PosToCell(y);
+	std::vector<BombArea*> pBombAreas;
+	pBombAreas.reserve(5);
+	pBombAreas.push_back(new BombArea(x, y, pGrenade->GetOwnerID(), Prop::propType::grenade, grenadeInitialTime));	//构造中心的爆炸区域
+	
+	std::function<void(int, int)> createGrenadeBombArea = [this, &pBombAreas, &InRange, pGrenade](int newXc, int newYc)
+	{
+		if (!InRange(newXc, newYc)) return; 
+		bool beBlocked = false;
+		std::list<obj_base*> mapObjList = GetMapObj(newXc, newYc);
+		for (auto pObj : mapObjList)
+		{
+			if (pObj->GetObjType() == obj_base::objType::hardObstacle)	//硬障碍，不能炸
+			{
+				beBlocked = true; break; 
+			}
+		}
+		if (!beBlocked) pBombAreas.push_back(new BombArea(CellToPos(newXc), CellToPos(newYc), pGrenade->GetOwnerID(), Prop::propType::grenade, grenadeInitialTime));
+	}; 
+
+	createGrenadeBombArea(xc - 1, yc); createGrenadeBombArea(xc + 1, yc); createGrenadeBombArea(xc, yc - 1); createGrenadeBombArea(xc, yc + 1);
+
+	//把爆炸区域都放到列表中
+	otherGameObjsMutex.lock();
+	for (auto pBombArea : pBombAreas)
+		otherGameObjs.push_back(pBombArea);
 	otherGameObjsMutex.unlock();
+	
+	//把手榴弹放入回收站
+	deletedObjsMutex.lock();
+	deletedObjs.push_back(pGrenade);
+	deletedObjsMutex.unlock();
+}
+
+void Game::BombMissile(Missile* pMissile)
+{
+	//从列表中删除导弹
+	otherGameObjsMutex.lock(); 
+	auto itr = std::find(otherGameObjs.begin(), otherGameObjs.end(), pMissile); 
+	if (itr != otherGameObjs.end()) otherGameObjs.erase(itr); 
+	otherGameObjsMutex.unlock(); 
+
+	//把导弹放入回收站
+	deletedObjsMutex.lock(); deletedObjs.push_back(pMissile); deletedObjsMutex.unlock();
 }
 
 void Game::BombMapCell(BombArea* pBombArea)

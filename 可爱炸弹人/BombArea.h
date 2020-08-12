@@ -17,6 +17,7 @@ public:
 	void SubTimeLeft(int subTime) { timeLeft -= subTime; }
 	bool AboutToDisappear() const { return timeLeft <= 0; }
 	int GetOwnerID() const { return ownerID; }
+	Prop::propType GetBomb() const { return bomb; }
 
 	virtual ~BombArea() {}
 private: 

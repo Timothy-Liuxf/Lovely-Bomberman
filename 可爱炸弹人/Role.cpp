@@ -44,7 +44,7 @@ void Role::TNTBomb()
 
 void Role::AddMoveSpeed()
 {
-	moveSpeed *= 2; 
+	moveSpeed *= 1.2; 
 	if (moveSpeed > posUnitPerCell) moveSpeed = posUnitPerCell; 
 }
 

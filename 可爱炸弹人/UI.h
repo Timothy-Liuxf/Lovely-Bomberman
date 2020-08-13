@@ -56,6 +56,9 @@ private:
 
 	void EndGame(); 
 
+	//记录角色按键状态
+	std::vector<bool> playerLay{ false, false }; 
+	
 	//位图句柄，缺省值均为NULL（C++11及以上）
 	HBITMAP hBmMem = NULL;				//用于缓冲
 	HBITMAP hBmBkgnd = NULL;			//背景位图句柄

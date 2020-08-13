@@ -1,18 +1,18 @@
 #include "Game.h"
 
 const int Game::playerInitialLife = 3;						//玩家初始生命
-const int Game::playerMissingTime = 2500;					//玩家受到攻击后的受保护时间
-const obj_base::sigPosType Game::defPosUnitPerCell = 1024;	//玩每格的长度
-const obj_base::sigPosType Game::roleInitialMoveSpeed = 32;	//玩家初始移动速度
-const obj_base::sigPosType Game::tntInitialMoveSpeed = 64;	//炸弹初始移动速度
+const int Game::playerMissingTime = 700;					//玩家受到攻击后的受保护时间
+const obj_base::sigPosType Game::defPosUnitPerCell = 1024;	//每格的长度
+const obj_base::sigPosType Game::roleInitialMoveSpeed = 80;	//玩家初始移动速度
+const obj_base::sigPosType Game::tntInitialMoveSpeed = 512;	//炸弹初始移动速度
 const int Game::tntInitialDistance = 2;						//炸弹初始爆炸距离
-const int Game::tntInitialTime = 3000;						//炸弹初始爆炸时间
-const int Game::tntBombAreaTime = 2000;						//炸弹的爆炸区域存留时间
-const int Game::mineInitialTime = 10000;					//炸弹和催泪瓦斯初始存留时间
+const int Game::tntInitialTime = 2000;						//炸弹初始爆炸时间
+const int Game::tntBombAreaTime = 500;						//炸弹的爆炸区域存留时间
+const int Game::mineInitialTime = 8000;						//地雷和催泪瓦斯初始存留时间
 const int Game::grenadeMaxDistance = 2;						//手榴弹移动距离
-const int Game::grenadeInitialTime = 500;					//手榴弹爆炸持续时间
+const int Game::grenadeInitialTime = 100;					//手榴弹爆炸持续时间
 const int Game::fireMaxDistance = 3;						//火焰枪攻击距离
-const int Game::fireInitialTime = 3000;						//火焰枪火焰持续时间
+const int Game::fireInitialTime = 500;						//火焰枪火焰持续时间
 const int Game::scoreOfDestroyObstacle = 1;					//摧毁障碍物得分
 const int Game::scoreOfHitOthers = 10;						//杀死其它角色得分
 const int Game::scoreOfPickProp = 2;						//捡道具得分
@@ -24,8 +24,8 @@ const std::map<Prop::propType, obj_base::sigPosType> Game::propMoveSpeed
 	std::make_pair(Prop::propType::mine, 0),
 	std::make_pair(Prop::propType::fire, 0),
 	std::make_pair(Prop::propType::ice, 0),
-	std::make_pair(Prop::propType::grenade, 64),
-	std::make_pair(Prop::propType::missile, 16),
+	std::make_pair(Prop::propType::grenade, 256),
+	std::make_pair(Prop::propType::missile, 128),
 }; 
 
 //产生道具的代号
@@ -71,7 +71,7 @@ const std::vector<std::vector<int>>& Game::GetGameMap(unsigned int num) const
 	return gameMap[num % (int)gameMap.size()];
 }
 
-Game::Game(int numOfPlayer, int id1, int id2) : numOfPlayer(numOfPlayer), id1(id1), id2(id2), nowLevel(0)
+Game::Game(int numOfPlayer, int id1, int id2) : numOfPlayer(numOfPlayer), id1(id1), id2(id2), nowLevel(0), randNum((unsigned)time(nullptr))
 {
 	int rows = gameMap[0].size(), cols = gameMap[0][0].size(); 
 	roles.resize(5, nullptr); 
@@ -200,7 +200,7 @@ void Game::LayTnt(int roleID)
 	SpecialBomb* pWeapon = pRole->GetWeapon();		//获取武器
 	pRole->GetMutex().unlock();						//解锁角色
 
-	if (pWeapon)									
+	if (pWeapon)									//如果有特殊武器
 	{
 		Prop::propType weaponType = pWeapon->GetPropType();
 		//手榴弹和火焰枪不能越界或仍在硬障碍物上
@@ -240,7 +240,7 @@ void Game::LayTnt(int roleID)
 		pRole->GetMutex().unlock();					//解锁角色
 		if (successLayTnt)
 		{
-			TNT* pTNT = new TNT(x, y, false, tntInitialMoveSpeed, roleID, tntInitialDistance, tntInitialTime);
+			TNT* pTNT = new TNT(x, y, false, tntInitialMoveSpeed, roleID, pRole->GetDistance(), tntInitialTime);
 			otherGameObjsMutex.lock(); otherGameObjs.push_back(static_cast<obj_base*>(pTNT)); otherGameObjsMutex.unlock();
 		}
 	}
@@ -315,10 +315,14 @@ void Game::WalkOneCell(int roleID, direction direct, int stepInterval)
 		case obj_base::objType::tnt:		//碰到炸弹
 		{
 			TNT* pTnt = dynamic_cast<TNT*>(pObj);
-			if (pRole->CanPushTnt() && !pTnt->IsMoving())
+			if (!pTnt->IsMoving())
 			{
-				//是否能推动炸弹
-				if (!MoveTnt(pTnt, direct)) return;	//不能推动炸弹，不能行走
+				if (pRole->CanPushTnt())
+				{
+					//是否能推动炸弹
+					if (!MoveTnt(pTnt, direct)) return;	//不能推动炸弹，不能行走
+				}
+				else return; 
 			}
 			break;
 		}
@@ -774,7 +778,7 @@ void Game::BombTnt(TNT* pTnt)
 	{
 		for (int j = 1; j < distance; ++j)
 		{
-			int newXc = x + j * xcMove[i], newYc = y + j * ycMove[i]; 
+			int newXc = xc + j * xcMove[i], newYc = yc + j * ycMove[i]; 
 			if (!InRange(newXc, newYc)) break; 
 			bool beBlocked = false; 
 			std::list<obj_base*> mapObjList = GetMapObj(newXc, newYc); 
@@ -1036,7 +1040,7 @@ void Game::RoleMiss(Role* pRole)
 void Game::CreateProp(int xc, int yc)
 {
 	auto x = CellToPos(xc), y = CellToPos(yc); 
-	Prop::propType newPropType = propNums[rand() % (propNums.size())]; 
+	Prop::propType newPropType = propNums[randNum() % (propNums.size())]; 
 	Prop* pNewProp = nullptr; 
 	switch (newPropType)
 	{
@@ -1056,7 +1060,7 @@ void Game::CreateProp(int xc, int yc)
 		pNewProp = new Shoe(x, y); 
 		break; 
 	case Prop::propType::jinKeLa: 
-		pNewProp = new Shoe(x, y); 
+		pNewProp = new JinKeLa(x, y); 
 		break; 
 	case Prop::propType::lachrymator: 
 		pNewProp = new Lachrymator(x, y, mineInitialTime); 

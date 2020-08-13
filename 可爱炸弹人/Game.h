@@ -6,7 +6,8 @@
 #include "Obstacle.h"
 #include "TNT.h"
 #include "BombArea.h"
-#include <cstdlib>
+#include <ctime>
+#include <random>
 #include <list>
 #include <vector>
 #include <map>
@@ -113,10 +114,12 @@ private:
 	std::list<obj_base*> deletedObjs; 
 	mutable std::mutex deletedObjsMutex; 
 
-	int numOfPlayer;		//游戏人数
-	int id1;				//1P的ID
-	int id2;				//2P的ID（如果有的话）
-	int nowLevel;			//当前关
+	int numOfPlayer;						//游戏人数
+	int id1;								//1P的ID
+	int id2;								//2P的ID（如果有的话）
+	int nowLevel;							//当前关
+
+	std::default_random_engine randNum;		//随机数产生
 	
 	//游戏地图
 	static const std::vector<std::vector<std::vector<int>>> gameMap; 

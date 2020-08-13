@@ -72,6 +72,13 @@ bool UI::messageProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     case WM_LBUTTONUP:
         InvalidateRect(hWnd, NULL, FALSE);
         break;
+    case WM_KEYDOWN: 
+        switch (wParam)
+        {
+        case VK_SPACE: if (programState == programstate::gaming) playerLay[0] = true; break; 
+        case VK_RETURN: if (programState == programstate::gaming) playerLay[1] = true; break;
+        }
+        break; 
     case WM_TIMER:
         if (wParam == TIMER_ID_START)
         {
@@ -165,25 +172,29 @@ void UI::RoleControl(int player)
 {
     if (player == 1)
     {
+        playerLay[0] = false; 
         while (programState == programstate::gaming)
         {
             if (GetKeyState('W') < 0) pGame->WalkUpOneCell(pGame->GetID1(), 1000 / dataFps);
             else if (GetKeyState('S') < 0) pGame->WalkDownOneCell(pGame->GetID1(), 1000 / dataFps);
             else if (GetKeyState('A') < 0) pGame->WalkLeftOneCell(pGame->GetID1(), 1000 / dataFps);
             else if (GetKeyState('D') < 0) pGame->WalkRightOneCell(pGame->GetID1(), 1000 / dataFps);
-            else if (GetKeyState(VK_SPACE) < 0) pGame->LayTnt(pGame->GetID1()); 
+            else if (playerLay[0]) pGame->LayTnt(pGame->GetID1()); 
+            playerLay[0] = false; 
             Sleep(1000 / dataFps); 
         }
     }
     else if (player == 2)
     {
+        playerLay[1] = false;
         while (programState == programstate::gaming)
         {
             if (GetKeyState(VK_UP) < 0) pGame->WalkUpOneCell(pGame->GetID2(), 1000 / dataFps);
             else if (GetKeyState(VK_DOWN) < 0) pGame->WalkDownOneCell(pGame->GetID2(), 1000 / dataFps);
             else if (GetKeyState(VK_LEFT) < 0) pGame->WalkLeftOneCell(pGame->GetID2(), 1000 / dataFps);
             else if (GetKeyState(VK_RIGHT) < 0) pGame->WalkRightOneCell(pGame->GetID2(), 1000 / dataFps);
-            else if (GetKeyState(VK_RETURN) < 0) pGame->LayTnt(pGame->GetID2());
+            else if (playerLay[1]) pGame->LayTnt(pGame->GetID2()); 
+            playerLay[1] = false;
             Sleep(1000 / dataFps);
         }
     }
@@ -295,14 +306,15 @@ void UI::Paint(HWND hWnd, const BOOL calledByPaintMessage)
                         Prop* pProp = dynamic_cast<Prop*>(pMapObj); 
                         switch (pProp->GetPropType())
                         {
-                        case Prop::propType::glove: SelectObject(hdcObj, hBmGlove); 
-                        case Prop::propType::shield: SelectObject(hdcObj, hBmShield);
-                        case Prop::propType::addtnt: SelectObject(hdcObj, hBmAddTnt); 
-                        case Prop::propType::addlife: SelectObject(hdcObj, hBmAddLife);
-                        case Prop::propType::shoe: SelectObject(hdcObj, hBmShoe);
-                        case Prop::propType::jinKeLa: SelectObject(hdcObj, hBmJinKeLa);
-                        case Prop::propType::fire: SelectObject(hdcObj, hBmFire);
-                        case Prop::propType::ice: SelectObject(hdcObj, hBmIce);
+                        case Prop::propType::glove: SelectObject(hdcObj, hBmGlove); goto paintUnpickedProp; 
+                        case Prop::propType::shield: SelectObject(hdcObj, hBmShield); goto paintUnpickedProp; 
+                        case Prop::propType::addtnt: SelectObject(hdcObj, hBmAddTnt); goto paintUnpickedProp; 
+                        case Prop::propType::addlife: SelectObject(hdcObj, hBmAddLife); goto paintUnpickedProp; 
+                        case Prop::propType::shoe: SelectObject(hdcObj, hBmShoe); goto paintUnpickedProp; 
+                        case Prop::propType::jinKeLa: SelectObject(hdcObj, hBmJinKeLa); goto paintUnpickedProp; 
+                        case Prop::propType::fire: SelectObject(hdcObj, hBmFire); goto paintUnpickedProp; 
+                        case Prop::propType::ice: SelectObject(hdcObj, hBmIce); goto paintUnpickedProp; 
+                        paintUnpickedProp: 
                             if (pProp->IsUnpicked())
                                 BitBlt(hdcMem, yp + (objSize - propSize) / 2, xp + (objSize - propSize) / 2, propSize, propSize, hdcObj, 0, 0, SRCCOPY);
                             break; 
@@ -330,8 +342,9 @@ void UI::Paint(HWND hWnd, const BOOL calledByPaintMessage)
                                 BitBlt(hdcMem, yp + (objSize - propSize) / 2, xp + (objSize - propSize) / 2, propSize, propSize, hdcObj, propSize, 0, SRCCOPY);
                             }
                             break;
-                        case Prop::propType::grenade: SelectObject(hdcObj, hBmGrenade);
-                        case Prop::propType::missile: SelectObject(hdcObj, hBmMissile); 
+                        case Prop::propType::grenade: SelectObject(hdcObj, hBmGrenade); goto printFlyingProp; 
+                        case Prop::propType::missile: SelectObject(hdcObj, hBmMissile); goto printFlyingProp; 
+                        printFlyingProp: 
                             if (pProp->IsUnpicked()) 
                                 BitBlt(hdcMem, yp + (objSize - propSize) / 2, xp + (objSize - propSize) / 2, propSize, propSize, hdcObj, 0, 0, SRCCOPY); 
                             else if (pProp->IsLaid())

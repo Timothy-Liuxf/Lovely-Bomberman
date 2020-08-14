@@ -3,7 +3,7 @@
 const int Game::playerInitialLife = 3;						//玩家初始生命
 const int Game::playerMissingTime = 700;					//玩家受到攻击后的受保护时间
 const obj_base::sigPosType Game::defPosUnitPerCell = 1024;	//每格的长度
-const obj_base::sigPosType Game::roleInitialMoveSpeed = 80;	//玩家初始移动速度
+const obj_base::sigPosType Game::roleInitialMoveSpeed = 96;	//玩家初始移动速度
 const obj_base::sigPosType Game::tntInitialMoveSpeed = 512;	//炸弹初始移动速度
 const int Game::tntInitialDistance = 2;						//炸弹初始爆炸距离
 const int Game::tntInitialTime = 2000;						//炸弹初始爆炸时间
@@ -771,7 +771,7 @@ void Game::BombTnt(TNT* pTnt)
 	auto xc = PosToCell(x), yc = PosToCell(y); 
 	std::vector<BombArea*> pBombAreas; 
 	pBombAreas.reserve((distance - 1) * 4 + 1); 
-	pBombAreas.push_back(new BombArea(x, y, pTnt->GetOwnerID(), Prop::propType::null, tntBombAreaTime));	//构造中心的爆炸区域
+	pBombAreas.push_back(new BombArea(CellToPos(xc), CellToPos(yc), pTnt->GetOwnerID(), Prop::propType::null, tntBombAreaTime));	//构造中心的爆炸区域
 	
 	//向四周查找
 	for (int i = 0; i < 4; ++i)

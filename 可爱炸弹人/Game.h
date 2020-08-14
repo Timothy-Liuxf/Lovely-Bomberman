@@ -45,6 +45,8 @@ private:
 	static const std::map<Prop::propType, obj_base::sigPosType> propMoveSpeed;
 	//产生道具的代号
 	static const std::vector<Prop::propType> propNums; 
+	//随机数产生
+	std::default_random_engine randNum;	
 
 public: 
 	Game(int numOfPlayer, int id1, int id2); 
@@ -58,6 +60,7 @@ public:
 	int GetID2() const { return id2; }
 	int GetNowLevel() const { return nowLevel; }
 	static int GetPosUnitPerCell() { return defPosUnitPerCell; }
+	const Role* GetRole(int roleID) { return roles[roleID]; }
 	//////const std::vector<Role*>& GetRoles() const { return roles; }
 	//////const std::list<Obstacle*>& GetObstacles() const { return obstacles; }
 	//////const std::list<obj_base*>& GetOtherGameObjs() const { return otherGameObjs; }
@@ -87,6 +90,9 @@ public:
 	void CheckBomb(int dataScanInterval);
 	//检查游戏是否结束
 	bool CheckGameEnd() const; 
+	
+	//获取随机数
+	auto GetRandom() { return randNum(); }
 
 	~Game(); 
 
@@ -119,7 +125,7 @@ private:
 	int id2;								//2P的ID（如果有的话）
 	int nowLevel;							//当前关
 
-	std::default_random_engine randNum;		//随机数产生
+	
 	
 	//游戏地图
 	static const std::vector<std::vector<std::vector<int>>> gameMap; 
@@ -130,7 +136,7 @@ private:
 	void BombTnt(TNT* pTnt);												//使该炸弹爆炸
 	void BombFire(Fire* pFire);												//使该火焰枪爆炸
 	void BombGrenade(Grenade* pGrenade);									//使该手榴弹爆炸
-	void BombMissile(Missile* pMissile);						//导弹爆炸
+	void BombMissile(Missile* pMissile);									//导弹爆炸
 	void BombMapCell(BombArea* pBombArea);									//爆破地图的一块
 	void RoleMiss(Role *pRole); 											//管理角色受伤后的保护状态
 	void CreateProp(int xc, int yc);										//在该点产生道具

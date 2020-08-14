@@ -9,6 +9,7 @@
 #include "resource.h"
 #include "str.h"
 #include "BasicWindow.h"
+#include <queue>
 
 //定时器ID
 
@@ -49,12 +50,17 @@ private:
 	static const int paintFps;			//画面帧
 
 	Game* pGame = nullptr;				//游戏内部逻辑
+	bool IsPlayer(int roleID) const		//判断是否是玩家
+	{
+		return pGame ? (roleID == pGame->GetID1() || (pGame->GetNumOfPlayer() == 2 && roleID == pGame->GetID2())) : false; 
+	}
+	bool IsComputer(int roleID) const { return pGame ? !IsPlayer(roleID) : false; }
 
 	void ScanData();					//扫描游戏数据
 	void RoleControl(int player);		//角色控制
 	void RefreshScreen();				//刷新屏幕
-
-	void EndGame(); 
+	void EndGame();						//结束游戏
+	void AI(int roleID);				//电脑AI
 
 	//记录角色按键状态
 	std::vector<bool> playerLay{ false, false }; 
@@ -106,6 +112,9 @@ private:
 
 	//人物坐标转图像坐标
 	int PosToPaint(int p) { return (int)(((double)p / Game::GetPosUnitPerCell() - 0.5) * objSize); }
+
+	//获取随机数
+	
 };
 
 #endif	// #ifndef GLOBALS_H

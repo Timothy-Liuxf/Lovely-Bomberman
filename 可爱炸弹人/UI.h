@@ -30,7 +30,7 @@ public:
 protected: 
 
 	//消息处理函数
-	virtual bool messageProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) override; 
+	virtual bool MessageProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) override; 
 
 private: 
 

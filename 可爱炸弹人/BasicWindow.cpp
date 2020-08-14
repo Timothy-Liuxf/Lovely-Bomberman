@@ -61,7 +61,7 @@ LRESULT CALLBACK BasicWindow::WndProc(HWND hWnd, UINT message, WPARAM wParam, LP
     }
     else thisWnd = (BasicWindow*)GetWindowLongPtr(hWnd, GWLP_USERDATA); 
     if (thisWnd == NULL) return DefWindowProc(hWnd, message, wParam, lParam); 
-    if (!thisWnd->messageProc(hWnd, message, wParam, lParam))
+    if (!thisWnd->MessageProc(hWnd, message, wParam, lParam))
     {
         if (message == WM_DESTROY)
         {

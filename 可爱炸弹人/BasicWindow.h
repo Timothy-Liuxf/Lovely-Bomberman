@@ -38,7 +38,7 @@ protected:
 	); 
 
 	//处理了消息返回true，没有处理则返回false
-	virtual bool messageProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) = 0; 
+	virtual bool MessageProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) = 0; 
 
 private: 
 

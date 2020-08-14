@@ -58,7 +58,7 @@ int UI::Begin(HINSTANCE hInstance, int nCmdShow)
 }
 
 //消息处理函数
-bool UI::messageProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
+bool UI::MessageProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     switch (message)
     {

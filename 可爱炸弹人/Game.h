@@ -22,7 +22,7 @@
 
 class Game
 {
-private: 
+public: 
 
 	static const int playerInitialLife;						//玩家初始生命
 	static const int playerMissingTime;						//玩家受到攻击后的受保护时间
@@ -45,6 +45,9 @@ private:
 	static const std::map<Prop::propType, obj_base::sigPosType> propMoveSpeed;
 	//产生道具的代号
 	static const std::vector<Prop::propType> propNums; 
+
+private: 
+
 	//随机数产生
 	std::default_random_engine randNum;	
 
@@ -61,9 +64,6 @@ public:
 	int GetNowLevel() const { return nowLevel; }
 	static int GetPosUnitPerCell() { return defPosUnitPerCell; }
 	const Role* GetRole(int roleID) { return roles[roleID]; }
-	//////const std::vector<Role*>& GetRoles() const { return roles; }
-	//////const std::list<Obstacle*>& GetObstacles() const { return obstacles; }
-	//////const std::list<obj_base*>& GetOtherGameObjs() const { return otherGameObjs; }
 
 	int GetNumOfPlayer() const { return numOfPlayer; }
 	int GetNumOfLevel() const { return (int)gameMap.size(); }

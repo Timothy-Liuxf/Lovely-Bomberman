@@ -374,23 +374,27 @@ bool Game::MoveTnt(TNT* pTnt, direction direct)
 		if (xc <= 0) return false;				//在地图顶端，无法推动
 		mapObjList = GetMapObj(xc - 1, yc);	
 		if (canMove()) { pTnt->GetMutex().lock(); pTnt->SetMoveUp(); pTnt->GetMutex().unlock(); }
+		else return false; 
 		break; 
 	case direction::Down: 
 		//在地图底端
 		if (xc >= (obj_base::sigPosType)gameMap[nowLevel].size() - 1) return false; 
 		mapObjList = GetMapObj(xc + 1, yc); 
 		if (canMove()) { pTnt->GetMutex().lock(); pTnt->SetMoveDown(); pTnt->GetMutex().unlock(); }
+		else return false; 
 		break; 
 	case direction::Left:
 		if (yc <= 0) return false;				//在地图左端，无法推动
 		mapObjList = GetMapObj(xc, yc - 1);
 		if (canMove()) { pTnt->GetMutex().lock(); pTnt->SetMoveLeft(); pTnt->GetMutex().unlock(); }
+		else return false; 
 		break;
 	case direction::Right:
 		//在地图右端
 		if (yc >= (obj_base::sigPosType)gameMap[nowLevel][0].size() - 1) return false;
 		mapObjList = GetMapObj(xc, yc + 1);
 		if (canMove()) { pTnt->GetMutex().lock(); pTnt->SetMoveRight(); pTnt->GetMutex().unlock(); }
+		else return false; 
 		break;
 	default: 
 		return false; 

@@ -10,6 +10,7 @@
 #include "str.h"
 #include "BasicWindow.h"
 #include <queue>
+#include <future>
 
 //定时器ID
 
@@ -19,7 +20,7 @@ class UI final : public BasicWindow
 {
 public: 
 
-	UI() = default; 
+	UI() : pRoleControlTasks(5, nullptr) {}
 
 	//开始创建窗口执行
 	int Begin(HINSTANCE hInstance, int nCmdShow); 
@@ -57,10 +58,14 @@ private:
 	bool IsComputer(int roleID) const { return pGame ? !IsPlayer(roleID) : false; }
 
 	void ScanData();					//扫描游戏数据
-	void RoleControl(int player);		//角色控制
+	void RoleControl(int roleID);		//角色控制
 	void RefreshScreen();				//刷新屏幕
 	void EndGame();						//结束游戏
 	void AI(int roleID);				//电脑AI
+
+	std::future<void>* pScanDataTask = nullptr; 
+	std::future<void>* pRefreshScreenTask = nullptr;
+	std::vector<std::future<void>*> pRoleControlTasks;
 
 	//记录角色按键状态
 	std::vector<bool> playerLay{ false, false }; 
@@ -113,8 +118,6 @@ private:
 	//人物坐标转图像坐标
 	int PosToPaint(int p) { return (int)(((double)p / Game::GetPosUnitPerCell() - 0.5) * objSize); }
 
-	//获取随机数
-	
 };
 
 #endif	// #ifndef GLOBALS_H

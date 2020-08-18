@@ -765,11 +765,6 @@ void Game::BombTnt(TNT* pTnt)
 		return (xc >= 0) && (yc >= 0) && (xc < rols) && (yc < cols); 
 	}; 
 
-	otherGameObjsMutex.lock();		//锁定列表，从列表中移除TNT
-	auto itr = std::find(otherGameObjs.begin(), otherGameObjs.end(), pTnt); 
-	if (itr != otherGameObjs.end()) otherGameObjs.erase(itr); 
-	otherGameObjsMutex.unlock();	//解锁列表
-
 	int distance = pTnt->GetDistance(); 
 	auto [x, y] = pTnt->GetPos(); 
 	auto xc = PosToCell(x), yc = PosToCell(y); 
@@ -812,7 +807,12 @@ void Game::BombTnt(TNT* pTnt)
 	roles[pTnt->GetOwnerID()]->GetMutex().lock(); 
 	roles[pTnt->GetOwnerID()]->TNTBomb(); 
 	roles[pTnt->GetOwnerID()]->GetMutex().unlock();
-	
+
+	otherGameObjsMutex.lock();		//锁定列表，从列表中移除TNT
+	auto itr = std::find(otherGameObjs.begin(), otherGameObjs.end(), pTnt);
+	if (itr != otherGameObjs.end()) otherGameObjs.erase(itr);
+	otherGameObjsMutex.unlock();	//解锁列表
+
 	//把TNT放入回收站
 	deletedObjsMutex.lock(); 
 	deletedObjs.push_back(pTnt); 
@@ -821,12 +821,6 @@ void Game::BombTnt(TNT* pTnt)
 
 void Game::BombFire(Fire* pFire)
 {
-	//从列表中移除
-	otherGameObjsMutex.lock();
-	auto itr = std::find(otherGameObjs.begin(), otherGameObjs.end(), pFire);
-	if (itr != otherGameObjs.end()) otherGameObjs.erase(itr);
-	otherGameObjsMutex.unlock();
-
 	auto [x, y] = pFire->GetPos(); 
 	auto xc = PosToCell(x), yc = PosToCell(y); 
 	int rols = (int)gameMap[nowLevel].size(), cols = (int)gameMap[nowLevel][0].size();
@@ -896,6 +890,12 @@ void Game::BombFire(Fire* pFire)
 		otherGameObjs.push_back(pBombArea);
 	otherGameObjsMutex.unlock(); 
 
+	//从列表中移除
+	otherGameObjsMutex.lock();
+	auto itr = std::find(otherGameObjs.begin(), otherGameObjs.end(), pFire);
+	if (itr != otherGameObjs.end()) otherGameObjs.erase(itr);
+	otherGameObjsMutex.unlock();
+
 	//把火焰枪放入回收站
 	deletedObjsMutex.lock(); deletedObjs.push_back(pFire); deletedObjsMutex.unlock(); 
 }
@@ -907,11 +907,6 @@ void Game::BombGrenade(Grenade* pGrenade)
 	{
 		return (xc >= 0) && (yc >= 0) && (xc < rols) && (yc < cols);
 	};
-
-	otherGameObjsMutex.lock();		//锁定列表，从列表中移除手榴弹
-	auto itr = std::find(otherGameObjs.begin(), otherGameObjs.end(), pGrenade);
-	if (itr != otherGameObjs.end()) otherGameObjs.erase(itr);
-	otherGameObjsMutex.unlock();	//解锁列表
 
 	auto [x, y] = pGrenade->GetPos();
 	auto xc = PosToCell(x), yc = PosToCell(y);
@@ -941,6 +936,12 @@ void Game::BombGrenade(Grenade* pGrenade)
 	for (auto pBombArea : pBombAreas)
 		otherGameObjs.push_back(pBombArea);
 	otherGameObjsMutex.unlock();
+
+
+	otherGameObjsMutex.lock();		//锁定列表，从列表中移除手榴弹
+	auto itr = std::find(otherGameObjs.begin(), otherGameObjs.end(), pGrenade);
+	if (itr != otherGameObjs.end()) otherGameObjs.erase(itr);
+	otherGameObjsMutex.unlock();	//解锁列表
 	
 	//把手榴弹放入回收站
 	deletedObjsMutex.lock();

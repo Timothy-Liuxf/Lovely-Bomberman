@@ -35,17 +35,20 @@ int UI::Begin(HINSTANCE hInstance, int nCmdShow)
     MSG msg;
 
     programState = programstate::gaming;
-    pGame = new Game(2, 1, 2);
+
+    [[maybe_unused]] int playerid1 = 3, playerid2 = 0, computerid1 = 1, computerid2 = 2, computerid3 = 4;
+
+    pGame = new Game(1, playerid1, playerid2);
     pGame->InitNewLevel(0, true);
-    std::thread thr1(&UI::ScanData, this); 
-    std::thread thr2(&UI::RoleControl, this, 1);
-    std::thread thr3(&UI::RefreshScreen, this); 
-    std::thread thr4(&UI::RoleControl, this, 2);
-    std::thread thr5(&UI::AI, this, 3); 
-    std::thread thr6(&UI::AI, this, 4);
-    thr1.detach(); thr2.detach(); 
-    thr3.detach(); thr4.detach(); 
-    thr5.detach(); thr6.detach();
+
+    pScanDataTask = new std::future<void>(std::async(&UI::ScanData, this)); 
+    pRefreshScreenTask = new std::future<void>(std::async(&UI::RefreshScreen, this));
+
+    //开启两个角色线程
+    pRoleControlTasks[1] = new std::future<void>(std::async(&UI::RoleControl, this, playerid1));    //角色1
+    pRoleControlTasks[2] = new std::future<void>(std::async(&UI::AI, this, computerid3));    //角色2
+    pRoleControlTasks[3] = new std::future<void>(std::async(&UI::AI, this, computerid1));
+    pRoleControlTasks[4] = new std::future<void>(std::async(&UI::AI, this, computerid2));
 
     // 主消息循环:
     while (GetMessage(&msg, NULL, 0, 0))
@@ -171,9 +174,9 @@ void UI::ScanData()
     }
 }
 
-void UI::RoleControl(int player)
+void UI::RoleControl(int roleID)
 {
-    if (player == 1)
+    if (roleID == pGame->GetID1())
     {
         playerLay[0] = false; 
         while (programState == programstate::gaming)
@@ -187,7 +190,7 @@ void UI::RoleControl(int player)
             Sleep(1000 / dataFps); 
         }
     }
-    else if (player == 2)
+    else if (roleID == pGame->GetID2())
     {
         playerLay[1] = false;
         while (programState == programstate::gaming)
@@ -216,7 +219,26 @@ void UI::EndGame()
 {
     programState = programstate::starting; 
     MessageBox(m_hWnd, TEXT("游戏结束"), NULL, MB_OK); 
+
+    //等待异步结束
+    if (pScanDataTask)
+    {
+        delete pScanDataTask; pScanDataTask = nullptr;
+    }
+    if (pRefreshScreenTask)
+    {
+        delete pRefreshScreenTask; pRefreshScreenTask = nullptr;
+    }
+    
+    for (auto& pRoleControl : pRoleControlTasks)
+    {
+        if (pRoleControl)
+        {
+            delete pRoleControl; pRoleControl = nullptr;
+        }
+    }
     Sleep(800); 
+
     delete pGame; 
     pGame = nullptr; 
 }
@@ -226,6 +248,22 @@ void UI::AI(int roleID)
     int rows, cols; 
     if (pGame) rows = pGame->GetGameMap(pGame->GetNowLevel()).size(), cols = pGame->GetGameMap(pGame->GetNowLevel())[0].size(); 
     else return; 
+
+    int computerID1 = 0, computerID2 = 0, computerID3 = 0, computerID4 = 0; 
+    for (int i = 1; i <= 4; ++i)
+    {
+        if (IsComputer(i))
+        {
+            if (computerID1 == 0) computerID1 = i;
+            else if (computerID2 == 0) computerID2 = i;
+            else if (computerID3 == 0) computerID3 = i; 
+            else if (computerID4 == 0) computerID4 = i;
+        }
+    }
+    
+    std::vector<std::pair<std::pair<int, int>, bool>> laidMine;                                             //记录自己放下的地雷
+    std::mutex laidMineMutex;                                                                               //管理它的互斥锁
+    std::vector<std::thread*> laidMineThread; 
 
     //判断是否越界
     std::function<bool(int, int)> InRange = [rows, cols](int xc, int yc) { return xc >= 0 && yc >= 0 && xc < rows && yc < cols; }; 
@@ -244,8 +282,20 @@ void UI::AI(int roleID)
         //检查周围的危险
         std::vector<std::vector<bool>> dangerous(rows, std::vector<bool>(cols, false));                     //记录是否有危险
         std::vector<std::vector<bool>> obstacle(rows, std::vector<bool>(cols, false));                      //记录是否有障碍
-        const std::vector<int> xMove{ -1, 1, 0, 0 }; 
-        const std::vector<int> yMove{ 0, 0, -1, 1 }; 
+        std::initializer_list<int> xList{ -1, 1, 0, 0 }; 
+        std::initializer_list<int> yList{ 0, 0, -1, 1 }; 
+        if (roleID == computerID2)
+        {
+            xList = { 0, 0, -1, 1 }; 
+            yList = { -1, 1, 0, 0 }; 
+        }
+        else if (roleID == computerID3)
+        {
+            xList = { 0, 0, 1, -1 };
+            yList = { 1, -1, 0, 0 };
+        }
+        const std::vector<int> xMove(xList); 
+        const std::vector<int> yMove(yList); 
         for (int tmpXc = 0; tmpXc < rows; ++tmpXc)
             for (int tmpYc = 0; tmpYc < cols; ++tmpYc)
             {
@@ -478,22 +528,21 @@ void UI::AI(int roleID)
             for (auto pLocalMapObj : localMapObjList)
                 if (pLocalMapObj->GetObjType() == obj_base::objType::role && IsComputer(dynamic_cast<Role*>(pLocalMapObj)->GetID()))
                     enemies.emplace_back(std::make_pair(xc, yc), std::make_pair(obj_base::direction::Null, 0));
-
-
+            
             //开始广搜
-            if (InRange(xc - 1, yc) && !dangerous[xc - 1][yc])
+            if (InRange(xc - 1, yc) && !dangerous[xc - 1][yc] && !obstacle[xc - 1][yc])
             {
                 q.emplace(std::make_pair(xc - 1, yc), std::make_pair(obj_base::direction::Up, 1)); hasVisited[xc - 1][yc] = true;
             }
-            if (InRange(xc + 1, yc) && !dangerous[xc + 1][yc])
+            if (InRange(xc + 1, yc) && !dangerous[xc + 1][yc] && !obstacle[xc + 1][yc])
             {
                 q.emplace(std::make_pair(xc + 1, yc), std::make_pair(obj_base::direction::Down, 1)); hasVisited[xc + 1][yc] = true;
             }
-            if (InRange(xc, yc - 1) && !dangerous[xc][yc - 1])
+            if (InRange(xc, yc - 1) && !dangerous[xc][yc - 1] && !obstacle[xc][yc - 1])
             {
                 q.emplace(std::make_pair(xc, yc - 1), std::make_pair(obj_base::direction::Left, 1)); hasVisited[xc][yc - 1] = true;
             }
-            if (InRange(xc, yc + 1) && !dangerous[xc][yc + 1])
+            if (InRange(xc, yc + 1) && !dangerous[xc][yc + 1] && !obstacle[xc][yc + 1])
             {
                 q.emplace(std::make_pair(xc, yc + 1), std::make_pair(obj_base::direction::Right, 1)); hasVisited[xc][yc + 1] = true;
             }
@@ -522,28 +571,52 @@ void UI::AI(int roleID)
                         break; 
                     }
                 }
+
+                bool hasLaidMine = false;                                                                   //检查是否有自己埋藏的地雷
+                laidMineMutex.lock(); 
+                for (int i = 0; i < (int)laidMine.size(); ++i)
+                {
+                    if (laidMine[i].second == false) continue;                                              //已经爆炸完毕的导弹
+                    if (laidMine[i].first.first == frontXc && laidMine[i].first.second == frontYc)
+                    {
+                        hasLaidMine = true; break; 
+                    }
+                }
+                laidMineMutex.unlock(); 
+
                 if (!obstacle[frontXc][frontYc]) for (int i = 0; i < 4; ++i)                                //没有障碍，就可以向四周遍历
                 {
                     int nextXc = frontXc + xMove[i], nextYc = frontYc + yMove[i]; 
                     if (InRange(nextXc, nextYc) && !hasVisited[nextXc][nextYc] && !dangerous[nextXc][nextYc])
                     {
-                        q.emplace(std::make_pair(nextXc, nextYc), std::make_pair(direct, depth + 1));
-                        hasVisited[nextXc][nextYc] = true; 
+                        bool isSoftObstacle = false; 
+                        if (hasLaidMine)                                                                    //如果本格有未爆炸的地雷，不录入旁边的软障碍
+                        {
+                            for (auto pNextMapObj : pGame->GetMapObj(nextXc, nextYc))
+                            {
+                                if (pNextMapObj->GetObjType() == obj_base::objType::softObstacle) isSoftObstacle = true; 
+                            }
+                        }
+                        if (!isSoftObstacle)
+                        {
+                            q.emplace(std::make_pair(nextXc, nextYc), std::make_pair(direct, depth + 1));
+                            hasVisited[nextXc][nextYc] = true;
+                        }
                     }
                 }
             }
 
             //临时函数，用于判断如果放置了TNT会不会成功逃生，后面用到
-            std::function<obj_base::direction(void)> canRunAway = [this, &dangerous, &obstacle, &xMove, &yMove, &InRange, xc, yc, rows, cols, roleID]()
+            std::function<obj_base::direction(int, int, int, int)> canRunAway = [this, &dangerous, &obstacle, &xMove, &yMove, &InRange, rows, cols, roleID](int roleXc, int roleYc, int tntXc, int tntYc)
             {
                 std::vector<std::vector<bool>> avoid(rows, std::vector<bool>(cols, false));     //记录若本次放置炸弹则炸到的区域
-                avoid[xc][yc] = true;
+                avoid[tntXc][tntYc] = true;
                 int distance = pGame->GetRole(roleID)->GetDistance();
                 for (int i = 0; i < 4; ++i)
                 {
                     for (int j = 1; j < distance; ++j)
                     {
-                        int tmpXc = xc + xMove[i] * j, tmpYc = yc + yMove[i] * j;
+                        int tmpXc = tntXc + xMove[i] * j, tmpYc = tntYc + yMove[i] * j;
                         if (!InRange(tmpXc, tmpYc)) break;
                         auto mapObjList = pGame->GetMapObj(tmpXc, tmpYc);
                         bool stop = false;
@@ -562,21 +635,21 @@ void UI::AI(int roleID)
 
                 std::queue<std::pair<std::pair<int, int>, std::pair<obj_base::direction, int>>> q;              //搜索一旦放完炸弹后是否有出路
                 std::vector<std::vector<bool>> hasVisited(rows, std::vector<bool>(cols));
-                if (InRange(xc - 1, yc) && !obstacle[xc - 1][yc] && !dangerous[xc - 1][yc])
+                if (InRange(roleXc - 1, roleYc) && !obstacle[roleXc - 1][roleYc] && !dangerous[roleXc - 1][roleYc])
                 {
-                    q.emplace(std::make_pair(xc - 1, yc), std::make_pair(obj_base::direction::Up, 1)); hasVisited[xc - 1][yc] = true;
+                    q.emplace(std::make_pair(roleXc - 1, roleYc), std::make_pair(obj_base::direction::Up, 1)); hasVisited[roleXc - 1][roleYc] = true;
                 }
-                if (InRange(xc + 1, yc) && !obstacle[xc + 1][yc] && !dangerous[xc + 1][yc])
+                if (InRange(roleXc + 1, roleYc) && !obstacle[roleXc + 1][roleYc] && !dangerous[roleXc + 1][roleYc])
                 {
-                    q.emplace(std::make_pair(xc + 1, yc), std::make_pair(obj_base::direction::Down, 1)); hasVisited[xc + 1][yc] = true;
+                    q.emplace(std::make_pair(roleXc + 1, roleYc), std::make_pair(obj_base::direction::Down, 1)); hasVisited[roleXc + 1][roleYc] = true;
                 }
-                if (InRange(xc, yc - 1) && !obstacle[xc][yc - 1] && !dangerous[xc][yc - 1])
+                if (InRange(roleXc, roleYc - 1) && !obstacle[roleXc][roleYc - 1] && !dangerous[roleXc][roleYc - 1])
                 {
-                    q.emplace(std::make_pair(xc, yc - 1), std::make_pair(obj_base::direction::Left, 1)); hasVisited[xc][yc - 1] = true;
+                    q.emplace(std::make_pair(roleXc, roleYc - 1), std::make_pair(obj_base::direction::Left, 1)); hasVisited[roleXc][roleYc - 1] = true;
                 }
-                if (InRange(xc, yc + 1) && !obstacle[xc][yc + 1] && !dangerous[xc][yc + 1])
+                if (InRange(roleXc, roleYc + 1) && !obstacle[roleXc][roleYc + 1] && !dangerous[roleXc][roleYc + 1])
                 {
-                    q.emplace(std::make_pair(xc, yc + 1), std::make_pair(obj_base::direction::Right, 1)); hasVisited[xc][yc + 1] = true;
+                    q.emplace(std::make_pair(roleXc, roleYc + 1), std::make_pair(obj_base::direction::Right, 1)); hasVisited[roleXc][roleYc + 1] = true;
                 }
 
                 while (!q.empty())
@@ -641,7 +714,24 @@ void UI::AI(int roleID)
                         }
                     }
 
-                    if (attack) pGame->LayTnt(roleID);                      //最终决定放置地雷
+                    if (attack)                                             //最终决定放置地雷
+                    {
+                        pGame->LayTnt(roleID); 
+                        if (pGame->GetRole(roleID)->GetWeapon() == nullptr)
+                        {
+                            int now = laidMine.size(); 
+                            laidMineMutex.lock(); 
+                            laidMine.emplace_back(std::make_pair(xc, yc), true); 
+                            laidMineMutex.unlock(); 
+                            laidMineThread.emplace_back(new std::thread
+                            ([&laidMineMutex, &laidMine](int i)
+                                {
+                                    std::this_thread::sleep_for(std::chrono::milliseconds(Game::mineInitialTime));
+                                    laidMineMutex.lock(); laidMine[i].second = false; laidMineMutex.unlock();
+                                }, now
+                            )); 
+                        }
+                    }
                     break;
                 }
                 case Prop::propType::fire:                                  //火焰枪，判断敌人是否在路上
@@ -741,7 +831,7 @@ void UI::AI(int roleID)
                                 }
                             if (attack) break;
                         }
-                        if (attack) pGame->LayTnt(roleID);                          //如果有敌人，炸他
+                        if (attack) { pGame->LayTnt(roleID); Sleep(1000 / dataFps); } //如果有敌人，炸他
                         else
                         {
                             for (int i = 0; i < 4; ++i)                             //没有敌人，搜寻四周
@@ -789,7 +879,7 @@ void UI::AI(int roleID)
                                     else if (xMove[i] == 1 && yMove[i] == 0) pGame->WalkDownOneCell(roleID, 1000 / dataFps);
                                     else if (xMove[i] == 0 && yMove[i] == -1) pGame->WalkLeftOneCell(roleID, 1000 / dataFps);
                                     else if (xMove[i] == 0 && yMove[i] == 1) pGame->WalkRightOneCell(roleID, 1000 / dataFps); 
-                                    pGame->LayTnt(roleID); 
+                                    pGame->LayTnt(roleID); Sleep(1000 / dataFps); 
                                 }
                             }
                         }
@@ -885,7 +975,7 @@ void UI::AI(int roleID)
 
                 if (attack)                                                             //如果发现敌人
                 {
-                    obj_base::direction runAwayDirect = canRunAway(); 
+                    obj_base::direction runAwayDirect = canRunAway(xc, yc, xc, yc); 
                     switch (runAwayDirect)
                     {
                     case obj_base::direction::Up: pGame->LayTnt(roleID); pGame->WalkUpOneCell(roleID, 1000 / dataFps); break; 
@@ -911,7 +1001,7 @@ void UI::AI(int roleID)
                     {
                         for (int i = 0; i < 4; ++i)                                 //搜查四周
                         {
-                            int nearXc = xc + xMove[i], nearYc = yc + xMove[i];
+                            int nearXc = xc + xMove[i], nearYc = yc + yMove[i];
                             if (!InRange(nearXc, nearYc)) continue;
                             bool stop = false; 
                             for (auto pMapObj : pGame->GetMapObj(nearXc, nearYc))
@@ -930,33 +1020,33 @@ void UI::AI(int roleID)
                                 }
                             }
                             if (stop) { attack = false; continue; }
-                            if (!attack)                                            //搜查沿线几格的
+
+                            //搜查沿线几格的
+                            if (dangerous[nearXc][nearYc]) { attack = false; continue; }
+                            for (int j = 2; j <= Game::fireMaxDistance; ++j)
                             {
-                                if (dangerous[nearXc][nearYc]) continue; 
-                                for (int j = 2; j <= Game::fireMaxDistance; ++j)
+                                int nextXc = xc + xMove[i] * j, nextYc = yc + yMove[i] * j;
+                                if (!InRange(nextXc, nextYc)) break;
+                                bool computerExists = false;
+                                for (auto pMapObj : pGame->GetMapObj(nextXc, nextYc))
                                 {
-                                    int nextXc = xc + xMove[i] * j, nextYc = xc + xMove[i] * j; 
-                                    if (!InRange(nextXc, nextYc)) break; 
-                                    bool computerExists = false; 
-                                    for (auto pMapObj : pGame->GetMapObj(nextXc, nextYc))
+                                    if (pMapObj->GetObjType() == obj_base::objType::softObstacle)
                                     {
-                                        if (pMapObj->GetObjType() == obj_base::objType::softObstacle)
-                                        {
-                                            attack = true; break;
-                                        }
-                                        else if (pMapObj->GetObjType() == obj_base::objType::hardObstacle)
-                                        {
-                                            stop = true; break;
-                                        }
-                                        else if (pMapObj->GetObjType() == obj_base::objType::role && IsComputer(dynamic_cast<Role*>(pMapObj)->GetID()))
-                                        {
-                                            computerExists = true; break;
-                                        }
+                                        attack = true; break;
                                     }
-                                    if (computerExists) { attack = false; break; }
-                                    if (stop || attack) break; 
+                                    else if (pMapObj->GetObjType() == obj_base::objType::hardObstacle)
+                                    {
+                                        stop = true; break;
+                                    }
+                                    else if (pMapObj->GetObjType() == obj_base::objType::role && IsComputer(dynamic_cast<Role*>(pMapObj)->GetID()))
+                                    {
+                                        computerExists = true; break;
+                                    }
                                 }
+                                if (computerExists) { attack = false; break; }
+                                if (stop || attack) break;
                             }
+                            
                             if (attack)
                             {
                                 if (xMove[i] == -1 && yMove[i] == 0) pGame->WalkUpOneCell(roleID, 1000 / dataFps); 
@@ -1004,7 +1094,7 @@ void UI::AI(int roleID)
                                         {
                                             stop = true; break;
                                         }
-                                        else if (pAroundMapObj->GetObjType() == obj_base::objType::softObstacle) { if (hasVisited[destXc][destYc]) attack = true; }
+                                        else if (pAroundMapObj->GetObjType() == obj_base::objType::softObstacle) { if (hasVisited[aroundXc][aroundYc]) attack = true; }
                                     if (stop) { attack = false; break; }
                                 }
                             }
@@ -1022,7 +1112,7 @@ void UI::AI(int roleID)
                         if (InRange(destXc, destYc))
                         {
                             attack = canLayGrenadeToBombSoftArea(destXc, destYc); 
-                            if (attack) pGame->LayTnt(roleID); 
+                            if (attack) { pGame->LayTnt(roleID); Sleep(1000 / dataFps); }
                         }
                         if (!attack)                                       //没执行攻击，查看四周有没有软障碍
                         {
@@ -1040,7 +1130,7 @@ void UI::AI(int roleID)
                                     else if (xMove[i] == 1 && yMove[i] == 0) pGame->WalkDownOneCell(roleID, 1000 / dataFps);
                                     else if (xMove[i] == 0 && yMove[i] == -1) pGame->WalkLeftOneCell(roleID, 1000 / dataFps);
                                     else if (xMove[i] == 0 && yMove[i] == 1) pGame->WalkRightOneCell(roleID, 1000 / dataFps);
-                                    pGame->LayTnt(roleID);
+                                    pGame->LayTnt(roleID); Sleep(1000 / dataFps);
                                     break; 
                                 }
                             }
@@ -1093,51 +1183,78 @@ void UI::AI(int roleID)
             {
                 if (!pWeapon && pGame->GetRole(roleID)->GetLeftTntNum() > 0) //没有特殊道具，有TNT，看看有没有爆炸范围内的软障碍
                 {
-                    int distance = pGame->GetRole(roleID)->GetDistance();     //获取自己放出炸弹的范围
-                    bool computerExists = false; 
-                    for (int i = 0; i < 4; ++i)                         //查看四周
+
+                    bool haveLaidMine = false;                          //本格是否有未爆炸的地雷
+                    laidMineMutex.lock(); 
+                    for (int i = 0; i < (int)laidMine.size(); ++i)
                     {
-                        for (int j = 1; j < distance; ++j)
+                        if (laidMine[i].second == false) continue; 
+                        if (laidMine[i].first.first == xc && laidMine[i].first.second == yc)
                         {
-                            int bombXc = xc + xMove[i] * j, bombYc = yc + yMove[i] * j; 
-                            int stop = false; 
-                            if (!InRange(bombXc, bombYc)) break; 
-                            for (auto pMapObj : pGame->GetMapObj(bombXc, bombYc))
+                            haveLaidMine = true; break; 
+                        }
+                    }
+                    laidMineMutex.unlock(); 
+
+                    if (!haveLaidMine)                                      //无地雷和催泪瓦斯，可以放置
+                    {
+                        int distance = pGame->GetRole(roleID)->GetDistance();     //获取自己放出炸弹的范围
+                        for (int i = 0; i < 4; ++i)                         //查看四周
+                        {
+                            for (int j = 1; j < distance; ++j)
                             {
-                                switch (pMapObj->GetObjType())
+                                int bombXc = xc + xMove[i] * j, bombYc = yc + yMove[i] * j;
+                                int stop = false;
+                                if (!InRange(bombXc, bombYc)) break;
+                                for (auto pMapObj : pGame->GetMapObj(bombXc, bombYc))
                                 {
-                                case obj_base::objType::role: 
-                                    if (IsComputer(dynamic_cast<Role*>(pMapObj)->GetID())) computerExists = true; 
-                                    break; 
-                                case obj_base::objType::softObstacle: attack = true; break; 
-                                case obj_base::objType::hardObstacle: stop = true; break;
+                                    switch (pMapObj->GetObjType())
+                                    {
+                                    case obj_base::objType::softObstacle: attack = true; break;
+                                    case obj_base::objType::hardObstacle: stop = true; break;
+                                    }
+                                    if (attack || stop) break;
                                 }
-                                if (computerExists || attack || stop) break; 
+                                if (attack || stop) break;
                             }
-                            if (computerExists || attack || stop) break;
                         }
-                        if (computerExists) break;
-                    }
 
-                    if (computerExists) attack = false; 
-                    else if (attack)
-                    {
-                        switch (canRunAway())
+                        bool prevDangerous = dangerous[xc][yc], prevObstacle = obstacle[xc][yc];
+                        dangerous[xc][yc] = obstacle[xc][yc] = true;
+
+                        for (int i = 1; i <= 4; ++i)            //找队友，会不会困死队友
                         {
-                        case obj_base::direction::Up: pGame->LayTnt(roleID); pGame->WalkUpOneCell(roleID, 1000 / dataFps); break; 
-                        case obj_base::direction::Down: pGame->LayTnt(roleID); pGame->WalkDownOneCell(roleID, 1000 / dataFps); break;
-                        case obj_base::direction::Left: pGame->LayTnt(roleID); pGame->WalkLeftOneCell(roleID, 1000 / dataFps); break;
-                        case obj_base::direction::Right: pGame->LayTnt(roleID); pGame->WalkRightOneCell(roleID, 1000 / dataFps); break;
-                        default: attack = false; break; 
+                            if (IsPlayer(i) || i == roleID) continue;
+                            auto [teamMateX, teamMateY] = pGame->GetRole(i)->GetPos();
+                            int teamMateXc = pGame->PosToCell(teamMateX), teamMateYc = pGame->PosToCell(teamMateY);
+                            if (canRunAway(teamMateXc, teamMateYc, xc, yc) == obj_base::direction::Null)  //会困死队友，不能安放
+                            {
+                                attack = false; break;
+                            }
+                        }
+
+                        dangerous[xc][yc] = prevDangerous; obstacle[xc][yc] = prevObstacle;
+
+                        if (attack)
+                        {
+                            switch (canRunAway(xc, yc, xc, yc))
+                            {
+                            case obj_base::direction::Up: pGame->LayTnt(roleID); pGame->WalkUpOneCell(roleID, 1000 / dataFps); break;
+                            case obj_base::direction::Down: pGame->LayTnt(roleID); pGame->WalkDownOneCell(roleID, 1000 / dataFps); break;
+                            case obj_base::direction::Left: pGame->LayTnt(roleID); pGame->WalkLeftOneCell(roleID, 1000 / dataFps); break;
+                            case obj_base::direction::Right: pGame->LayTnt(roleID); pGame->WalkRightOneCell(roleID, 1000 / dataFps); break;
+                            default: attack = false; break;
+                            }
                         }
                     }
-
                 }
 
                 if (!attack)
                 {
-                    //如果手中拿的不是地雷或催泪瓦斯
-                    if (!(pWeapon && (pWeapon->GetPropType() == Prop::propType::mine || pWeapon->GetPropType() == Prop::propType::lachrymator)))
+                    //如果手中拿的不是地雷或催泪瓦斯或手榴弹
+                    if (!(pWeapon && (pWeapon->GetPropType() == Prop::propType::mine 
+                        || pWeapon->GetPropType() == Prop::propType::lachrymator 
+                        || pWeapon->GetPropType() == Prop::propType::grenade)))
                     {
                         if (!softObstacles.empty())             //去找软障碍
                         {
@@ -1177,7 +1294,24 @@ void UI::AI(int roleID)
                     if (!pWeapon && pGame->GetRole(roleID)->GetLeftTntNum() > 0)
                     {
                         attack = true; 
-                        switch (canRunAway())
+
+                        bool prevDangerous = dangerous[xc][yc], prevObstacle = obstacle[xc][yc]; 
+                        dangerous[xc][yc] = obstacle[xc][yc] = true; 
+                        
+                        for (int i = 1; i <= 4; ++i)            //找队友，会不会困死队友
+                        {
+                            if (IsPlayer(i) || i == roleID) continue;
+                            auto [teamMateX, teamMateY] = pGame->GetRole(i)->GetPos();
+                            int teamMateXc = pGame->PosToCell(teamMateX), teamMateYc = pGame->PosToCell(teamMateY);
+                            if (canRunAway(teamMateXc, teamMateYc, xc, yc) == obj_base::direction::Null)  //会困死队友，不能安放
+                            {
+                                attack = false; break;
+                            }
+                        }
+
+                        dangerous[xc][yc] = prevDangerous; obstacle[xc][yc] = prevObstacle; 
+
+                        if (attack) switch (canRunAway(xc, yc, xc, yc))
                         {
                         case obj_base::direction::Up: pGame->LayTnt(roleID); pGame->WalkUpOneCell(roleID, 1000 / dataFps); break;
                         case obj_base::direction::Down: pGame->LayTnt(roleID); pGame->WalkDownOneCell(roleID, 1000 / dataFps); break;
@@ -1187,16 +1321,16 @@ void UI::AI(int roleID)
                         }
                     }
 
-                    if (!attack)                            //无法防止TNT，随便走一个方向
+                    if (!attack)                            //无法放置TNT，随便走一个方向
                     {
                         int directInt = pGame->GetRandom() % 4; 
                         int destXc = xc + xMove[directInt], destYc = yc + yMove[directInt]; 
                         if (InRange(destXc, destYc) && !dangerous[destXc][destYc] && !obstacle[destXc][destYc])
                         {
                             if (xMove[directInt] == -1 && yMove[directInt] == 0) pGame->WalkUpOneCell(roleID, 1000 / dataFps); 
-                            else if (xMove[directInt] == -1 && yMove[directInt] == 0) pGame->WalkUpOneCell(roleID, 1000 / dataFps);
-                            else if (xMove[directInt] == -1 && yMove[directInt] == 0) pGame->WalkUpOneCell(roleID, 1000 / dataFps);
-                            else if (xMove[directInt] == -1 && yMove[directInt] == 0) pGame->WalkUpOneCell(roleID, 1000 / dataFps);
+                            else if (xMove[directInt] == 1 && yMove[directInt] == 0) pGame->WalkDownOneCell(roleID, 1000 / dataFps);
+                            else if (xMove[directInt] == 0 && yMove[directInt] == -1) pGame->WalkLeftOneCell(roleID, 1000 / dataFps);
+                            else if (xMove[directInt] == 0 && yMove[directInt] == 1) pGame->WalkRightOneCell(roleID, 1000 / dataFps);
                             attack = true; 
                         }
                     }
@@ -1204,6 +1338,16 @@ void UI::AI(int roleID)
             }
         }
     }
+
+    for (auto& pLaidMineThread : laidMineThread)
+    {
+        if (pLaidMineThread)
+        {
+            if (pLaidMineThread->joinable()) pLaidMineThread->join(); 
+            delete pLaidMineThread; pLaidMineThread = nullptr; 
+        }
+    }
+
 }
 
 void UI::Paint(HWND hWnd, const BOOL calledByPaintMessage)
@@ -1362,9 +1506,29 @@ void UI::Paint(HWND hWnd, const BOOL calledByPaintMessage)
 UI::~UI()
 {
     if(hBmMem) DeleteObject(hBmMem); 
+
+    programState = programstate::starting;
+
+    //等待异步结束
+    if (pScanDataTask)
+    {
+        delete pScanDataTask; pScanDataTask = nullptr;
+    }
+    if (pRefreshScreenTask)
+    {
+        delete pRefreshScreenTask; pRefreshScreenTask = nullptr;
+    }
+
+    for (auto& pRoleControl : pRoleControlTasks)
+    {
+        if (pRoleControl)
+        {
+            delete pRoleControl; pRoleControl = nullptr;
+        }
+    }
+
     if (pGame)
     {
-        programState = programstate::starting;
         Sleep(800);
         delete pGame;
         pGame = nullptr;

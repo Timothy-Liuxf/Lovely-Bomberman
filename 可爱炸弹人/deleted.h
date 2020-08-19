@@ -128,3 +128,31 @@
 //
 //        }
 //    }
+
+
+
+    //[[maybe_unused]] int playerid1 = 3, playerid2 = 0, computerid1 = 1, computerid2 = 2, computerid3 = 4;
+
+    //pGame = new Game(1, playerid1, playerid2, Game::Difficulty::easy);
+    //pGame->InitNewLevel(0, true);
+
+    //pScanDataTask = new std::future<void>(std::async(&UI::ScanData, this)); 
+    //pRefreshScreenTask = new std::future<void>(std::async(&UI::RefreshScreen, this));
+
+    ////开启两个角色线程
+    //pRoleControlTasks[1] = new std::future<void>(std::async(&UI::RoleControl, this, playerid1));    //角色1
+    //pRoleControlTasks[2] = new std::future<void>(std::async(&UI::AI, this, computerid3));    //角色2
+    //pRoleControlTasks[3] = new std::future<void>(std::async(&UI::AI, this, computerid1));
+    //pRoleControlTasks[4] = new std::future<void>(std::async(&UI::AI, this, computerid2));
+
+    /*case WM_TIMER:
+        if (wParam == TIMER_ID_START)
+        {
+            InvalidateRect(hWnd, NULL, TRUE);
+            KillTimer(hWnd, TIMER_ID_START);
+        }
+        else
+        {
+            InvalidateRect(hWnd, NULL, FALSE);
+        }
+        break; */

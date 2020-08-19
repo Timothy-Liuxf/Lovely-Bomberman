@@ -7,12 +7,7 @@
 
 #define BASIC_WINDOW_H
 
-#ifndef WIN32_LEAN_AND_MEAN
-#define WIN32_LEAN_AND_MEAN             // 从 Windows 头文件中排除极少使用的内容
-#endif	// #ifndef WIN32_LEAN_AND_MEAN
-
-#include <windows.h>
-#include <tchar.h>
+#include "Win32Basic.h"
 
 //错误提示
 
@@ -28,13 +23,14 @@ protected:
 
 	HINSTANCE m_hInst;					//当前实例
 	HWND m_hWnd = NULL;				//主窗口句柄
+	HACCEL m_hAccel = NULL; 
 
 	//创建窗口
 	BOOL Init
 	(
 		HINSTANCE hInstance, int nCmdShow,
 		int x, int y, int cx, int cy, DWORD dwStyle,
-		LPCTSTR c_lpszWndTitle, WNDCLASSEX wcex
+		LPCTSTR c_lpszWndTitle, WNDCLASSEX wcex, LPCTSTR c_lpszAccel
 	); 
 
 	//处理了消息返回true，没有处理则返回false

@@ -52,7 +52,15 @@ private:
 	std::default_random_engine randNum;	
 
 public: 
-	Game(int numOfPlayer, int id1, int id2); 
+
+	enum class Difficulty
+	{
+		easy, 
+		mediem, 
+		difficult
+	};
+
+	Game(int numOfPlayer, int id1, int id2, Difficulty difficulty); 
 
 	int PosToCell(obj_base::sigPosType x) const { return x / defPosUnitPerCell; }
 	obj_base::sigPosType CellToPos(int x) const { return x * defPosUnitPerCell + defPosUnitPerCell / 2; }
@@ -64,6 +72,7 @@ public:
 	int GetNowLevel() const { return nowLevel; }
 	static int GetPosUnitPerCell() { return defPosUnitPerCell; }
 	const Role* GetRole(int roleID) { return roles[roleID]; }
+	Difficulty GetDifficulty() const { return difficulty; }
 
 	int GetNumOfPlayer() const { return numOfPlayer; }
 	int GetNumOfLevel() const { return (int)gameMap.size(); }
@@ -124,6 +133,7 @@ private:
 	int id1;								//1P的ID
 	int id2;								//2P的ID（如果有的话）
 	int nowLevel;							//当前关
+	Difficulty difficulty;					//难度
 
 	
 	

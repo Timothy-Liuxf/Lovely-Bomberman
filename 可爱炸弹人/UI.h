@@ -9,6 +9,7 @@
 #include "resource.h"
 #include "str.h"
 #include "BasicWindow.h"
+#include "BasicDialog.h"
 #include <queue>
 #include <future>
 
@@ -40,6 +41,7 @@ private:
 		starting = 0,		//开始界面
 		gaming = 1,			//正在游戏
 		gamePulsing = 2,	//游戏暂停
+		changeLevel = 3		//换关
 	}; 
 	programstate programState;			//程序状态
 
@@ -72,6 +74,7 @@ private:
 	
 	//位图句柄，缺省值均为NULL（C++11及以上）
 	HBITMAP hBmMem = NULL;				//用于缓冲
+	HBITMAP hBmMain = NULL;				//开始界面位图背景
 	HBITMAP hBmBkgnd = NULL;			//背景位图句柄
 	HBITMAP hBmRole = NULL;				//角色位图句柄
 	HBITMAP hBmTnt = NULL;				//炸弹位图句柄
@@ -91,6 +94,7 @@ private:
 
 	//（位图信息）
 	BITMAP bmBkgnd;						//背景位图信息
+	BITMAP bmMain;						//开始界面位图
 	BITMAP bmRole;						//角色位图信息
 	BITMAP bmTnt;						//炸弹位图信息
 	BITMAP bmObstacle;					//障碍物位图信息
@@ -117,6 +121,33 @@ private:
 
 	//人物坐标转图像坐标
 	int PosToPaint(int p) { return (int)(((double)p / Game::GetPosUnitPerCell() - 0.5) * objSize); }
+
+	//开始游戏对话框
+	class StartGameDlg : public BasicModalDialog
+	{
+	private: using Difficulty = Game::Difficulty; 
+
+	protected: 
+		virtual void MessageProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam) override; 
+
+	public: 
+		StartGameDlg() : choose(false), difficulty(Difficulty::easy), numOfPlayer(0), player1ID(0), player2ID(0) {}
+		bool Begin(HINSTANCE hInstance, HWND hWndParent);
+		bool Choose() const { return choose; }
+		int NumOfPlayer() const { return numOfPlayer; }
+		int Player1ID() const { return player1ID; }
+		int Player2ID() const { return player2ID; }
+		Difficulty GetDifficulty() const { return difficulty; }
+
+	private: 
+		bool choose;					//是否选择成功
+		Difficulty difficulty;			//难度
+		int numOfPlayer;				//玩家数
+		int player1ID;					//1P的id
+		int player2ID;					//2P的ID
+	};
+
+	StartGameDlg startGameDlg; 
 
 };
 

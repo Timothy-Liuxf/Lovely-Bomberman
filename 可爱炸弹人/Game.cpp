@@ -71,7 +71,7 @@ const std::vector<std::vector<int>>& Game::GetGameMap(unsigned int num) const
 	return gameMap[num % (int)gameMap.size()];
 }
 
-Game::Game(int numOfPlayer, int id1, int id2) : numOfPlayer(numOfPlayer), id1(id1), id2(id2), nowLevel(0), randNum((unsigned)time(nullptr))
+Game::Game(int numOfPlayer, int id1, int id2, Difficulty difficulty) : numOfPlayer(numOfPlayer), id1(id1), id2(id2), nowLevel(0), difficulty(difficulty), randNum((unsigned)time(nullptr))
 {
 	int rows = gameMap[0].size(), cols = gameMap[0][0].size(); 
 	roles.resize(5, nullptr); 
@@ -133,10 +133,10 @@ void Game::InitNewLevel(int newLevel, bool mergeScore)
 			switch (static_cast<mapItem>(gameMap[newLevel][x][y]))
 			{
 			case mapItem::hardObstacle: 
-				obstacles.push_back(new HardObstacle(CellToPos(x), CellToPos(y))); 
+				obstacles.push_back(new HardObstacle(CellToPos(x), CellToPos(y), randNum() % 2)); 
 				break; 
 			case mapItem::softObstacle:
-				obstacles.push_back(new SoftObstacle(CellToPos(x), CellToPos(y)));
+				obstacles.push_back(new SoftObstacle(CellToPos(x), CellToPos(y), randNum() % 2));
 				break;
 			}
 		}
@@ -407,6 +407,9 @@ void Game::CheckRole()
 	Role* pRole; 
 	for (int i = 1; i <= 4; ++i)
 	{
+		//简单与中等难度的电脑不能拾取道具
+		if ((difficulty == Difficulty::easy || difficulty == Difficulty::mediem)
+			&& !(i == id1 || numOfPlayer == 2 && i == id2))	continue; 
 		pRole = roles[i]; 
 		if (!pRole->IsLiving()) continue;									//角色已经死亡
 		auto [x, y] = pRole->GetPos();										//获取角色位置（C++17）

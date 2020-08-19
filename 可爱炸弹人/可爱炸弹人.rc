@@ -1,14 +1,11 @@
-/////////////////////////////////////////////
+// Microsoft Visual C++ generated resource script.
 //
-//  资源文件
-//
-
 #include "resource.h"
 
 #define APSTUDIO_READONLY_SYMBOLS
 /////////////////////////////////////////////////////////////////////////////
 //
-// 从 TEXTINCLUDE 2 资源生成。
+// Generated from the TEXTINCLUDE 2 resource.
 //
 #include "winres.h"
 
@@ -16,10 +13,11 @@
 #undef APSTUDIO_READONLY_SYMBOLS
 
 /////////////////////////////////////////////////////////////////////////////
-// 中文(简体，中国) 资源
+// 中文(简体，中国) resources
 
-#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
-LANGUAGE 4, 2
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_CHS)
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
+#pragma code_page(936)
 
 #ifdef APSTUDIO_INVOKED
 /////////////////////////////////////////////////////////////////////////////
@@ -27,18 +25,18 @@ LANGUAGE 4, 2
 // TEXTINCLUDE
 //
 
-1 TEXTINCLUDE
+1 TEXTINCLUDE 
 BEGIN
     "resource.h\0"
 END
 
-2 TEXTINCLUDE  
+2 TEXTINCLUDE 
 BEGIN
     "#include ""winres.h""\r\n"
     "\0"
 END
 
-3 TEXTINCLUDE  
+3 TEXTINCLUDE 
 BEGIN
     "\r\n"
     "\0"
@@ -46,7 +44,145 @@ END
 
 #endif    // APSTUDIO_INVOKED
 
-#endif    // 中文(简体，中国) 资源
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Menu
+//
+
+MAINMENU MENU
+BEGIN
+    POPUP "开始(&B)"
+    BEGIN
+        MENUITEM "开始游戏(&S)\tCtrl+S",            IDM_START
+        MENUITEM "暂停(&P)\tCtrl+P",              IDM_PAUSE, GRAYED
+        MENUITEM "结束游戏(&D)\tCtrl+D",            IDM_END, GRAYED
+        MENUITEM "重新开始(&R)\tCtrl+R",            IDM_RESTART, GRAYED
+        MENUITEM SEPARATOR
+        MENUITEM "退出(&E)\tCtrl+E",              IDM_EXIT
+    END
+    MENUITEM "高分榜(&L)",                     IDM_LIST
+    MENUITEM "帮助(&H)",                      IDM_HELP
+    MENUITEM "关于(&A)",                      IDM_ABOUT
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Accelerator
+//
+
+MAINMENUACCELERATOR ACCELERATORS
+BEGIN
+    "^S",           IDM_START,              ASCII,  NOINVERT
+    "^P",           IDM_PAUSE,              ASCII,  NOINVERT
+    "^D",           IDM_END,                ASCII,  NOINVERT
+    "^R",           IDM_RESTART,            ASCII,  NOINVERT
+    "^E",           IDM_EXIT,               ASCII,  NOINVERT
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Version
+//
+
+VS_VERSION_INFO VERSIONINFO
+ FILEVERSION 1,0,0,0
+ PRODUCTVERSION 1,0,0,0
+ FILEFLAGSMASK 0x3fL
+#ifdef _DEBUG
+ FILEFLAGS 0x1L
+#else
+ FILEFLAGS 0x0L
+#endif
+ FILEOS 0x40004L
+ FILETYPE 0x1L
+ FILESUBTYPE 0x0L
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "080404b0"
+        BEGIN
+            VALUE "FileDescription", "游戏可爱炸弹人主程序"
+            VALUE "FileVersion", "1.0.0.0"
+            VALUE "InternalName", "可爱炸弹人.exe"
+            VALUE "LegalCopyright", "Copyright (C) 2020 计算机程序设计基础(2) 保留所有权利"
+            VALUE "OriginalFilename", "可爱炸弹人.exe"
+            VALUE "ProductName", "可爱炸弹人"
+            VALUE "ProductVersion", "1.0.0.0"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x804, 1200
+    END
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+STARTGAME_DIALOG DIALOGEX 0, 0, 239, 122
+STYLE DS_SETFONT | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "开始游戏"
+FONT 12, "隶书", 0, 0, 0x1
+BEGIN
+    GROUPBOX        "难度",IDC_CHOOSE_DIFFICULTY,14,10,46,74
+    CONTROL         "简单",IDC_EASY,"Button",BS_AUTORADIOBUTTON | WS_GROUP,24,25,32,10
+    CONTROL         "一般",IDC_MEDIUM,"Button",BS_AUTORADIOBUTTON,24,44,32,10
+    CONTROL         "困难",IDC_DIFFICULT,"Button",BS_AUTORADIOBUTTON,24,63,32,10
+    GROUPBOX        "人数",IDC_NUM_OF_PLAYER,75,10,46,74
+    CONTROL         "单人",IDC_SINGLE,"Button",BS_AUTORADIOBUTTON | WS_GROUP,85,33,32,10
+    CONTROL         "双人",IDC_DOUBLE,"Button",BS_AUTORADIOBUTTON,85,56,32,10
+    GROUPBOX        "Player1",IDC_PLAYER1,136,10,36,74
+    CONTROL         "红",IDC_PLAYER1_RED,"Button",BS_AUTORADIOBUTTON | WS_GROUP,145,23,24,10
+    CONTROL         "黄",IDC_PLAYER1_YELLOW,"Button",BS_AUTORADIOBUTTON,145,37,24,10
+    CONTROL         "绿",IDC_PLAYER1_GREEN,"Button",BS_AUTORADIOBUTTON,145,51,24,10
+    CONTROL         "蓝",IDC_PLAYER1_BLUE,"Button",BS_AUTORADIOBUTTON,145,65,24,10
+    GROUPBOX        "Player2",IDC_PLAYER2,187,10,36,74
+    CONTROL         "红",IDC_PLAYER2_RED,"Button",BS_AUTORADIOBUTTON | WS_GROUP,196,23,24,10
+    CONTROL         "黄",IDC_PLAYER2_YELLOW,"Button",BS_AUTORADIOBUTTON,196,37,24,10
+    CONTROL         "绿",IDC_PLAYER2_GREEN,"Button",BS_AUTORADIOBUTTON,196,51,24,10
+    CONTROL         "蓝",IDC_PLAYER2_BLUE,"Button",BS_AUTORADIOBUTTON,196,65,24,10
+    DEFPUSHBUTTON   "确定",IDOK,14,96,96,14
+    PUSHBUTTON      "取消",IDCANCEL,127,96,96,14
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO
+BEGIN
+    STARTGAME_DIALOG, DIALOG
+    BEGIN
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// AFX_DIALOG_LAYOUT
+//
+
+IDD_DIALOG1 AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
+
+STARTGAME_DIALOG AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
+
+#endif    // 中文(简体，中国) resources
 /////////////////////////////////////////////////////////////////////////////
 
 
@@ -54,9 +190,10 @@ END
 #ifndef APSTUDIO_INVOKED
 /////////////////////////////////////////////////////////////////////////////
 //
-// 从 TEXTINCLUDE 3 资源生成。
+// Generated from the TEXTINCLUDE 3 resource.
 //
 
 
 /////////////////////////////////////////////////////////////////////////////
-#endif    // 不是 APSTUDIO_INVOKED
+#endif    // not APSTUDIO_INVOKED
+

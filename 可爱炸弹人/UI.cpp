@@ -3,7 +3,7 @@
 const int UI::objSize = 40;
 const int UI::propSize = 30;
 const POINT UI::mainWndPos = { 0, 0 };
-const POINT UI::mainWndSize = { (objSize * 15) + 200, objSize * 13 }; 
+const POINT UI::mainWndSize = { (objSize * 15) + 240, objSize * 13 }; 
 const int UI::dataFps = 50; 
 const int UI::paintFps = 50;
 
@@ -11,7 +11,7 @@ int UI::Begin(HINSTANCE hInstance, int nCmdShow)
 {
 
     //加载位图
-    LoadGameImg();
+    if (!LoadGameImg()) return 0; 
 
     //定义窗口样式
     WNDCLASSEX wcex;
@@ -23,38 +23,28 @@ int UI::Begin(HINSTANCE hInstance, int nCmdShow)
     wcex.hIcon = LoadIcon(NULL, IDI_APPLICATION);
     wcex.hCursor = LoadCursor(nullptr, IDC_ARROW);
     wcex.hbrBackground = NULL;
-    wcex.lpszMenuName = NULL;
+    wcex.lpszMenuName = MAKEINTRESOURCE(MAINMENU); 
     wcex.lpszClassName = c_lpszWndClassName;
     wcex.hIconSm = LoadIcon(NULL, IDI_APPLICATION);
-
-    capMenuAppendCy = GetSystemMetrics(SM_CYMENU) + GetSystemMetrics(SM_CYCAPTION); 
+    
+    capMenuAppendCy = GetSystemMetrics(SM_CYMENU) + GetSystemMetrics(SM_CYMIN);
 
     Init(hInstance, nCmdShow, 0, 0, mainWndSize.x, mainWndSize.y + capMenuAppendCy, 
-        WS_VISIBLE | WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_BORDER | WS_MINIMIZEBOX, c_lpszWndTitle, wcex);
+        WS_VISIBLE | WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_BORDER | WS_MINIMIZEBOX, 
+        c_lpszWndTitle, wcex, MAKEINTRESOURCE(MAINMENUACCELERATOR));
 
     MSG msg;
 
-    programState = programstate::gaming;
-
-    [[maybe_unused]] int playerid1 = 3, playerid2 = 0, computerid1 = 1, computerid2 = 2, computerid3 = 4;
-
-    pGame = new Game(1, playerid1, playerid2);
-    pGame->InitNewLevel(0, true);
-
-    pScanDataTask = new std::future<void>(std::async(&UI::ScanData, this)); 
-    pRefreshScreenTask = new std::future<void>(std::async(&UI::RefreshScreen, this));
-
-    //开启两个角色线程
-    pRoleControlTasks[1] = new std::future<void>(std::async(&UI::RoleControl, this, playerid1));    //角色1
-    pRoleControlTasks[2] = new std::future<void>(std::async(&UI::AI, this, computerid3));    //角色2
-    pRoleControlTasks[3] = new std::future<void>(std::async(&UI::AI, this, computerid1));
-    pRoleControlTasks[4] = new std::future<void>(std::async(&UI::AI, this, computerid2));
+    programState = programstate::starting;
 
     // 主消息循环:
     while (GetMessage(&msg, NULL, 0, 0))
     {
-        TranslateMessage(&msg);
-        DispatchMessage(&msg);
+        if (!TranslateAccelerator(m_hWnd, m_hAccel, &msg))
+        {
+            TranslateMessage(&msg);
+            DispatchMessage(&msg);
+        }
     }
 
     return (int)msg.wParam; 
@@ -67,8 +57,6 @@ bool UI::MessageProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     {
     case WM_CREATE: 
         CreateBuffer(hWnd);
-        SetTimer(hWnd, TIMER_ID_START, 500, NULL);
-        SetTimer(hWnd, 500, 20, NULL);
         break; 
     case WM_PAINT:
     {
@@ -85,25 +73,75 @@ bool UI::MessageProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         case VK_RETURN: if (programState == programstate::gaming) playerLay[1] = true; break;
         }
         break; 
-    case WM_TIMER:
-        if (wParam == TIMER_ID_START)
-        {
-            InvalidateRect(hWnd, NULL, TRUE);
-            KillTimer(hWnd, TIMER_ID_START);
-        }
-        else
-        {
-            InvalidateRect(hWnd, NULL, FALSE);
-        }
-        break; 
     case WM_DESTROY: 
         if (hBmMem)
         {
             DeleteObject(hBmMem); 
             hBmMem = NULL; 
         }
-        KillTimer(hWnd, 500); 
+        //KillTimer(hWnd, 500); 
         PostQuitMessage(0); 
+        break; 
+    case WM_COMMAND: 
+    {
+        switch (LOWORD(wParam))
+        {
+        case IDM_START: 
+        {
+            startGameDlg.Begin(m_hInst, hWnd);
+            if (!startGameDlg.Choose()) break;
+            pGame = new Game(startGameDlg.NumOfPlayer(), startGameDlg.Player1ID(),
+                startGameDlg.Player2ID(), startGameDlg.GetDifficulty());
+            pGame->InitNewLevel(0, true);
+            programState = programstate::gaming;
+            pScanDataTask = new std::future<void>(std::async(&UI::ScanData, this));
+            pRefreshScreenTask = new std::future<void>(std::async(&UI::RefreshScreen, this));
+            pRoleControlTasks[1] = new std::future<void>(std::async(&UI::RoleControl, this, startGameDlg.Player1ID()));    //角色1
+            if (startGameDlg.NumOfPlayer() == 2)
+            {
+                pRoleControlTasks[2] = new std::future<void>(std::async(&UI::RoleControl, this, startGameDlg.Player2ID()));    //角色2
+                int i = 3;
+                for (int j = 1; j <= 4; ++j)
+                {
+                    if (j == startGameDlg.Player1ID() || j == startGameDlg.Player2ID()) continue;
+                    pRoleControlTasks[i] = new std::future<void>(std::async(&UI::AI, this, j));
+                    ++i;
+                }
+            }
+            else if (startGameDlg.NumOfPlayer() == 1)
+            {
+                int i = 2;
+                for (int j = 1; j <= 4; ++j)
+                {
+                    if (j == startGameDlg.Player1ID()) continue;
+                    pRoleControlTasks[i] = new std::future<void>(std::async(&UI::AI, this, j));
+                    ++i;
+                }
+            }
+            HMENU hMenu = GetMenu(hWnd);
+            EnableMenuItem(hMenu, IDM_START, TRUE);
+            EnableMenuItem(hMenu, IDM_RESTART, FALSE);
+            EnableMenuItem(hMenu, IDM_PAUSE, FALSE);
+            EnableMenuItem(hMenu, IDM_END, FALSE);
+            break;
+        }
+        case IDM_PAUSE: 
+            programState = programstate::gamePulsing; 
+            MessageBox(hWnd, TEXT("暂停中……\nPausing..."), TEXT("游戏暂停"), MB_OK); 
+            programState = programstate::gaming;
+            break; 
+        case IDM_ABOUT: 
+            MessageBox(hWnd, c_lpszAbout, TEXT("About"), MB_OK | MB_ICONINFORMATION); 
+            break; 
+        case IDM_EXIT:                          //退出
+            SendMessage(hWnd, WM_CLOSE, 0, 0); 
+            break; 
+        }
+        break; 
+    }
+    case WM_CLOSE: 
+        if (MessageBox(hWnd, TEXT("你确定要退出吗？\nAre you sure to quit?"), TEXT("Exit"), MB_YESNO | MB_ICONQUESTION) == IDYES)
+            SendMessage(hWnd, WM_DESTROY, 0, 0);
         break; 
     default: 
         return false; 
@@ -113,46 +151,75 @@ bool UI::MessageProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
 bool UI::LoadGameImg()
 {
-    hBmBkgnd = (HBITMAP)LoadImage(m_hInst, TEXT("image\\bkgnd.bmp"), IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
-    hBmRole = (HBITMAP)LoadImage(m_hInst, TEXT("image\\role.bmp"), IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
-    hBmTnt = (HBITMAP)LoadImage(m_hInst, TEXT("image\\tnt.bmp"), IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE); 
-    hBmObstacle = (HBITMAP)LoadImage(m_hInst, TEXT("image\\obstacle.bmp"), IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE); 
-    hBmGlove = (HBITMAP)LoadImage(m_hInst, TEXT("image\\glove.bmp"), IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
-    hBmShield = (HBITMAP)LoadImage(m_hInst, TEXT("image\\shield.bmp"), IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
-    hBmAddTnt = (HBITMAP)LoadImage(m_hInst, TEXT("image\\addtnt.bmp"), IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
-    hBmAddLife = (HBITMAP)LoadImage(m_hInst, TEXT("image\\addLife.bmp"), IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
-    hBmShoe = (HBITMAP)LoadImage(m_hInst, TEXT("image\\shoe.bmp"), IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
-    hBmJinKeLa = (HBITMAP)LoadImage(m_hInst, TEXT("image\\jinkela.bmp"), IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
-    hBmLachrymator = (HBITMAP)LoadImage(m_hInst, TEXT("image\\lachrymator.bmp"), IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
-    hBmMine = (HBITMAP)LoadImage(m_hInst, TEXT("image\\mine.bmp"), IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
-    hBmFire = (HBITMAP)LoadImage(m_hInst, TEXT("image\\fire.bmp"), IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
-    hBmIce = (HBITMAP)LoadImage(m_hInst, TEXT("image\\ice.bmp"), IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
-    hBmGrenade = (HBITMAP)LoadImage(m_hInst, TEXT("image\\grenade.bmp"), IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
-    hBmMissile = (HBITMAP)LoadImage(m_hInst, TEXT("image\\missil.bmp"), IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
+loadImage: 
+
+    hBmBkgnd = (HBITMAP)LoadImage(m_hInst, BKGND_PATH, IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
+    hBmMain = (HBITMAP)LoadImage(m_hInst, MAIN_PATH, IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
+    hBmRole = (HBITMAP)LoadImage(m_hInst, ROLE_PATH, IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
+    hBmTnt = (HBITMAP)LoadImage(m_hInst, TNT_PATH, IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE); 
+    hBmObstacle = (HBITMAP)LoadImage(m_hInst, OBSTACLE_PATH, IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE); 
+    hBmGlove = (HBITMAP)LoadImage(m_hInst, GLOVE_PATH, IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
+    hBmShield = (HBITMAP)LoadImage(m_hInst, SHIELD_PATH, IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
+    hBmAddTnt = (HBITMAP)LoadImage(m_hInst, ADDTNT_PATH, IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
+    hBmAddLife = (HBITMAP)LoadImage(m_hInst, ADDLIFE_PATH, IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
+    hBmShoe = (HBITMAP)LoadImage(m_hInst, SHOE_PATH, IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
+    hBmJinKeLa = (HBITMAP)LoadImage(m_hInst, JINKELA_PATH, IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
+    hBmLachrymator = (HBITMAP)LoadImage(m_hInst, LACHRYMATOR_PATH, IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
+    hBmMine = (HBITMAP)LoadImage(m_hInst, MINE_PATH, IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
+    hBmFire = (HBITMAP)LoadImage(m_hInst, FIRE_PATH, IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
+    hBmIce = (HBITMAP)LoadImage(m_hInst, ICE_PATH, IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
+    hBmGrenade = (HBITMAP)LoadImage(m_hInst, GRENADE_PATH, IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
+    hBmMissile = (HBITMAP)LoadImage(m_hInst, MISSILE_PATH, IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
 
     if (!hBmBkgnd || !hBmRole || !hBmTnt || !hBmObstacle || !hBmGlove || !hBmShield | !hBmAddTnt || !hBmAddLife || !hBmShoe 
         || !hBmJinKeLa || !hBmLachrymator || !hBmMine || !hBmFire || !hBmIce || !hBmGrenade || !hBmMissile)
     {
-        MessageBox(m_hWnd, TEXT("加载图片失败！"), c_lpszError, MB_OK | MB_ICONERROR);
-        return false; 
+
+        if (!hBmBkgnd) MessageBox(m_hWnd, IMAGE_LOAD_FAIL_STR(BKGND_PATH), c_lpszError, MB_OK | MB_ICONERROR);
+        if (!hBmMain) MessageBox(m_hWnd, IMAGE_LOAD_FAIL_STR(MAIN_PATH), c_lpszError, MB_OK | MB_ICONERROR);
+        if (!hBmRole) MessageBox(m_hWnd, IMAGE_LOAD_FAIL_STR(ROLE_PATH), c_lpszError, MB_OK | MB_ICONERROR);
+        if (!hBmTnt) MessageBox(m_hWnd, IMAGE_LOAD_FAIL_STR(TNT_PATH), c_lpszError, MB_OK | MB_ICONERROR);
+        if (!hBmObstacle) MessageBox(m_hWnd, IMAGE_LOAD_FAIL_STR(OBSTACLE_PATH), c_lpszError, MB_OK | MB_ICONERROR);
+        if (!hBmGlove) MessageBox(m_hWnd, IMAGE_LOAD_FAIL_STR(GLOVE_PATH), c_lpszError, MB_OK | MB_ICONERROR);
+        if (!hBmShield) MessageBox(m_hWnd, IMAGE_LOAD_FAIL_STR(SHIELD_PATH), c_lpszError, MB_OK | MB_ICONERROR);
+        if (!hBmAddTnt) MessageBox(m_hWnd, IMAGE_LOAD_FAIL_STR(ADDTNT_PATH), c_lpszError, MB_OK | MB_ICONERROR);
+        if (!hBmAddLife) MessageBox(m_hWnd, IMAGE_LOAD_FAIL_STR(ADDLIFE_PATH), c_lpszError, MB_OK | MB_ICONERROR);
+        if (!hBmShoe) MessageBox(m_hWnd, IMAGE_LOAD_FAIL_STR(SHOE_PATH), c_lpszError, MB_OK | MB_ICONERROR);
+        if (!hBmJinKeLa) MessageBox(m_hWnd, IMAGE_LOAD_FAIL_STR(JINKELA_PATH), c_lpszError, MB_OK | MB_ICONERROR);
+        if (!hBmLachrymator) MessageBox(m_hWnd, IMAGE_LOAD_FAIL_STR(LACHRYMATOR_PATH), c_lpszError, MB_OK | MB_ICONERROR);
+        if (!hBmMine) MessageBox(m_hWnd, IMAGE_LOAD_FAIL_STR(MINE_PATH), c_lpszError, MB_OK | MB_ICONERROR);
+        if (!hBmFire) MessageBox(m_hWnd, IMAGE_LOAD_FAIL_STR(FIRE_PATH), c_lpszError, MB_OK | MB_ICONERROR);
+        if (!hBmIce) MessageBox(m_hWnd, IMAGE_LOAD_FAIL_STR(ICE_PATH), c_lpszError, MB_OK | MB_ICONERROR);
+        if (!hBmGrenade) MessageBox(m_hWnd, IMAGE_LOAD_FAIL_STR(GRENADE_PATH), c_lpszError, MB_OK | MB_ICONERROR);
+        if (!hBmMissile) MessageBox(m_hWnd, IMAGE_LOAD_FAIL_STR(MISSILE_PATH), c_lpszError, MB_OK | MB_ICONERROR);
+
+    choose: 
+        switch (MessageBox(m_hWnd, IMAGE_LOAD_FAIL_RETRY, c_lpszError, MB_ABORTRETRYIGNORE | MB_ICONERROR))
+        {
+        case IDRETRY: goto loadImage; 
+        default: case IDABORT: return false; 
+        case IDIGNORE: 
+            if (MessageBox(m_hWnd, c_lpszWarning, c_lpszWarningTitle, MB_YESNO | MB_ICONWARNING) != IDYES) goto choose; 
+        }
     }
 
-    GetObject(hBmBkgnd, sizeof(BITMAP), &bmBkgnd); 
-    GetObject(hBmRole, sizeof(BITMAP), &bmRole); 
-    GetObject(hBmTnt, sizeof(BITMAP), &bmTnt); 
-    GetObject(hBmObstacle, sizeof(BITMAP), &bmObstacle); 
-    GetObject(hBmGlove, sizeof(BITMAP), &bmGlove);
-    GetObject(hBmShield, sizeof(BITMAP), &bmShield);
-    GetObject(hBmAddTnt, sizeof(BITMAP), &bmAddTnt);
-    GetObject(hBmAddLife, sizeof(BITMAP), &bmAddLife);
-    GetObject(hBmShoe, sizeof(BITMAP), &bmShoe);
-    GetObject(hBmJinKeLa, sizeof(BITMAP), &bmJinKeLa);
-    GetObject(hBmLachrymator, sizeof(BITMAP), &bmLachrymator);
-    GetObject(hBmMine, sizeof(BITMAP), &bmMine);
-    GetObject(hBmFire, sizeof(BITMAP), &bmFire);
-    GetObject(hBmIce, sizeof(BITMAP), &bmIce);
-    GetObject(hBmGrenade, sizeof(BITMAP), &bmGrenade);
-    GetObject(hBmMissile, sizeof(BITMAP), &bmMissile);
+    if (hBmBkgnd) GetObject(hBmBkgnd, sizeof(BITMAP), &bmBkgnd); 
+    if (hBmMain) GetObject(hBmMain, sizeof(BITMAP), &bmMain);
+    if (hBmRole) GetObject(hBmRole, sizeof(BITMAP), &bmRole); 
+    if (hBmTnt) GetObject(hBmTnt, sizeof(BITMAP), &bmTnt);
+    if (hBmObstacle) GetObject(hBmObstacle, sizeof(BITMAP), &bmObstacle);
+    if (hBmGlove) GetObject(hBmGlove, sizeof(BITMAP), &bmGlove);
+    if (hBmShield) GetObject(hBmShield, sizeof(BITMAP), &bmShield);
+    if (hBmAddTnt) GetObject(hBmAddTnt, sizeof(BITMAP), &bmAddTnt);
+    if (hBmAddLife) GetObject(hBmAddLife, sizeof(BITMAP), &bmAddLife);
+    if (hBmShoe) GetObject(hBmShoe, sizeof(BITMAP), &bmShoe);
+    if (hBmJinKeLa) GetObject(hBmJinKeLa, sizeof(BITMAP), &bmJinKeLa);
+    if (hBmLachrymator) GetObject(hBmLachrymator, sizeof(BITMAP), &bmLachrymator);
+    if (hBmMine) GetObject(hBmMine, sizeof(BITMAP), &bmMine);
+    if (hBmFire) GetObject(hBmFire, sizeof(BITMAP), &bmFire);
+    if (hBmIce) GetObject(hBmIce, sizeof(BITMAP), &bmIce);
+    if (hBmGrenade) GetObject(hBmGrenade, sizeof(BITMAP), &bmGrenade);
+    if (hBmMissile) GetObject(hBmMissile, sizeof(BITMAP), &bmMissile);
 	return true; 
 }
 
@@ -165,12 +232,18 @@ void UI::CreateBuffer(HWND hWnd)
 
 void UI::ScanData()
 {
-    while (programState == programstate::gaming)
+    while (programState == programstate::gaming || programState == programstate::gamePulsing)
     {
+        while (programState == programstate::gamePulsing) Sleep(1000 / dataFps); 
         pGame->CheckRole(); 
         pGame->CheckBomb(1000 / dataFps); 
         Sleep(1000 / dataFps); 
-        if (pGame->CheckGameEnd()) EndGame(); 
+        if (pGame->CheckGameEnd())
+        {
+            std::thread end(&UI::EndGame, this); 
+            end.detach(); 
+            break; 
+        }
     }
 }
 
@@ -179,8 +252,10 @@ void UI::RoleControl(int roleID)
     if (roleID == pGame->GetID1())
     {
         playerLay[0] = false; 
-        while (programState == programstate::gaming)
+        while (programState == programstate::gaming || programState == programstate::gamePulsing)
         {
+            while (programState == programstate::gamePulsing) Sleep(1000 / dataFps); 
+            if (!pGame->GetRole(roleID)->IsLiving()) break; 
             if (GetKeyState('W') < 0) pGame->WalkUpOneCell(pGame->GetID1(), 1000 / dataFps);
             else if (GetKeyState('S') < 0) pGame->WalkDownOneCell(pGame->GetID1(), 1000 / dataFps);
             else if (GetKeyState('A') < 0) pGame->WalkLeftOneCell(pGame->GetID1(), 1000 / dataFps);
@@ -193,8 +268,10 @@ void UI::RoleControl(int roleID)
     else if (roleID == pGame->GetID2())
     {
         playerLay[1] = false;
-        while (programState == programstate::gaming)
+        while (programState == programstate::gaming || programState == programstate::gamePulsing)
         {
+            while (programState == programstate::gamePulsing) Sleep(1000 / dataFps);
+            if (!pGame->GetRole(roleID)->IsLiving()) break;
             if (GetKeyState(VK_UP) < 0) pGame->WalkUpOneCell(pGame->GetID2(), 1000 / dataFps);
             else if (GetKeyState(VK_DOWN) < 0) pGame->WalkDownOneCell(pGame->GetID2(), 1000 / dataFps);
             else if (GetKeyState(VK_LEFT) < 0) pGame->WalkLeftOneCell(pGame->GetID2(), 1000 / dataFps);
@@ -208,7 +285,7 @@ void UI::RoleControl(int roleID)
 
 void UI::RefreshScreen()
 {
-    while (programState == programstate::gaming)
+    while (programState == programstate::gaming || programState == programstate::gamePulsing)
     {
         InvalidateRect(m_hWnd, NULL, FALSE); 
         Sleep(1000 / paintFps); 
@@ -219,28 +296,36 @@ void UI::EndGame()
 {
     programState = programstate::starting; 
     MessageBox(m_hWnd, TEXT("游戏结束"), NULL, MB_OK); 
-
+    
     //等待异步结束
     if (pScanDataTask)
     {
-        delete pScanDataTask; pScanDataTask = nullptr;
+        pScanDataTask->wait(); delete pScanDataTask; pScanDataTask = nullptr;
     }
     if (pRefreshScreenTask)
     {
-        delete pRefreshScreenTask; pRefreshScreenTask = nullptr;
+        pRefreshScreenTask->wait(); delete pRefreshScreenTask; pRefreshScreenTask = nullptr;
     }
     
     for (auto& pRoleControl : pRoleControlTasks)
     {
         if (pRoleControl)
         {
-            delete pRoleControl; pRoleControl = nullptr;
+            pRoleControl->wait(); delete pRoleControl; pRoleControl = nullptr;
         }
     }
     Sleep(800); 
 
     delete pGame; 
     pGame = nullptr; 
+
+
+    HMENU hMenu = GetMenu(m_hWnd); 
+    EnableMenuItem(hMenu, IDM_START, FALSE);
+    EnableMenuItem(hMenu, IDM_RESTART, TRUE);
+    EnableMenuItem(hMenu, IDM_PAUSE, TRUE);
+    EnableMenuItem(hMenu, IDM_END, TRUE);
+    InvalidateRect(m_hWnd, NULL, FALSE); 
 }
 
 void UI::AI(int roleID)
@@ -270,8 +355,7 @@ void UI::AI(int roleID)
 
     while (programState == programstate::gaming || programState == programstate::gamePulsing)               //游戏还没结束
     {
-        while (programState == programstate::gamePulsing) Sleep(dataFps);                                   //游戏暂停状态，停止
-        if (!(programState == programstate::gaming || programState == programstate::gamePulsing)) break;    //游戏结束了，停止
+        while (programState == programstate::gamePulsing) Sleep(1000 / dataFps);                            //游戏暂停状态，停止
         
         if (!pGame->GetRole(roleID)->IsLiving()) break;                                                     //人死了，停止
 
@@ -1141,7 +1225,7 @@ void UI::AI(int roleID)
                 }
             }
             
-            if (!attack)
+            if (!attack && pGame->GetDifficulty() == Game::Difficulty::difficult)
             {
                 for (int i = 0; i < (int)unpickedProps.size(); ++i)          //捡道具
                 {
@@ -1367,60 +1451,81 @@ void UI::Paint(HWND hWnd, const BOOL calledByPaintMessage)
 
     switch (programState)
     {
+    case programstate::starting: 
+    {
+        SelectObject(hdcMem, hBmMain); 
+        break; 
+    }
     case programstate::gaming: 
     case programstate::gamePulsing: 
+    case programstate::changeLevel: 
     {
         BitBlt(hdcMem, 0, 0, objSize * 15, objSize * 13, hdcObj, 0, 0, SRCCOPY); 
         if (pGame == nullptr) break; 
         int rows = pGame->GetGameMap(pGame->GetNowLevel()).size(), cols = pGame->GetGameMap(pGame->GetNowLevel())[0].size();
         for (int i = 0; i < rows; ++i)
+        {
             for (int j = 0; j < cols; ++j)
             {
-                auto mapObjList = pGame->GetMapObj(i, j); 
+                auto mapObjList = pGame->GetMapObj(i, j);
                 for (auto pMapObj : mapObjList)
                 {
                     auto [x, y] = pMapObj->GetPos();
-                    int xp = PosToPaint(x), yp = PosToPaint(y); 
+                    int xp = PosToPaint(x), yp = PosToPaint(y);
                     switch (pMapObj->GetObjType())
                     {
-                    case obj_base::objType::role: 
+                    case obj_base::objType::role:
                     {
-                        Role* pRole = dynamic_cast<Role*>(pMapObj); 
+                        Role* pRole = dynamic_cast<Role*>(pMapObj);
+                        int yGrid = 0;
+                        switch (pRole->GetDirect())
+                        {
+                        case obj_base::direction::Down: yGrid = 0; break;
+                        case obj_base::direction::Up: yGrid = 1; break;
+                        case obj_base::direction::Left: yGrid = 2; break;
+                        case obj_base::direction::Right: yGrid = 3; break;
+                        }
                         SelectObject(hdcObj, hBmRole);
-                        BitBlt(hdcMem, yp, xp, objSize, objSize, hdcObj, objSize * (pRole->GetID() - 1), 0, SRCCOPY);
+                        BitBlt(hdcMem, yp, xp, objSize, objSize, hdcObj, objSize * (pRole->GetID() - 1), yGrid * objSize, SRCCOPY);
                         break;
                     }
                     case obj_base::objType::tnt:
                     {
                         SelectObject(hdcObj, hBmTnt);
                         BitBlt(hdcMem, yp + (objSize - propSize) / 2, xp + (objSize - propSize) / 2, propSize, propSize, hdcObj, 0, 0, SRCCOPY);
-                        break; 
+                        break;
                     }
-                    case obj_base::objType::softObstacle: 
+                    case obj_base::objType::softObstacle:
                     {
+                        int xGrid = 0;
+                        if (dynamic_cast<SoftObstacle*>(pMapObj)->GetStyle()) xGrid = 1;
+                        else xGrid = 0;
                         SelectObject(hdcObj, hBmObstacle);
-                        BitBlt(hdcMem, yp, xp, objSize, objSize, hdcObj, 0, 0, SRCCOPY);
+                        BitBlt(hdcMem, yp, xp, objSize, objSize, hdcObj, 0, xGrid * objSize, SRCCOPY);
                         break;
                     }
                     case obj_base::objType::hardObstacle:
                     {
+                        int xGrid = 0;
+                        if (dynamic_cast<HardObstacle*>(pMapObj)->GetStyle()) xGrid = 1;
+                        else xGrid = 0;
                         SelectObject(hdcObj, hBmObstacle);
-                        BitBlt(hdcMem, yp, xp, objSize, objSize, hdcObj, objSize, 0, SRCCOPY);
+                        BitBlt(hdcMem, yp, xp, objSize, objSize, hdcObj, objSize, xGrid * objSize, SRCCOPY);
                         break;
                     }
                     case obj_base::objType::bombArea:
                     {
-                        BombArea* pBombArea = dynamic_cast<BombArea*>(pMapObj); 
+                        BombArea* pBombArea = dynamic_cast<BombArea*>(pMapObj);
                         switch (pBombArea->GetBomb())
                         {
-                        case Prop::propType::null: 
+                        case Prop::propType::null:
                             SelectObject(hdcObj, hBmTnt);
                             BitBlt(hdcMem, yp + (objSize - propSize) / 2, xp + (objSize - propSize) / 2, propSize, propSize, hdcObj, propSize, 0, SRCCOPY);
-                            break; 
-                        case Prop::propType::fire: 
+                            break;
+                        case Prop::propType::fire:
                             SelectObject(hdcObj, hBmFire);
                             BitBlt(hdcMem, yp + (objSize - propSize) / 2, xp + (objSize - propSize) / 2, propSize, propSize, hdcObj, propSize, 0, SRCCOPY);
-                            break; 
+                            break;
                         case Prop::propType::ice:
                             SelectObject(hdcObj, hBmIce);
                             BitBlt(hdcMem, yp + (objSize - propSize) / 2, xp + (objSize - propSize) / 2, propSize, propSize, hdcObj, propSize, 0, SRCCOPY);
@@ -1430,25 +1535,25 @@ void UI::Paint(HWND hWnd, const BOOL calledByPaintMessage)
                             BitBlt(hdcMem, yp + (objSize - propSize) / 2, xp + (objSize - propSize) / 2, propSize, propSize, hdcObj, propSize * 2, 0, SRCCOPY);
                             break;
                         }
-                        break; 
+                        break;
                     }
-                    case obj_base::objType::prop: 
+                    case obj_base::objType::prop:
                     {
-                        Prop* pProp = dynamic_cast<Prop*>(pMapObj); 
+                        Prop* pProp = dynamic_cast<Prop*>(pMapObj);
                         switch (pProp->GetPropType())
                         {
-                        case Prop::propType::glove: SelectObject(hdcObj, hBmGlove); goto paintUnpickedProp; 
-                        case Prop::propType::shield: SelectObject(hdcObj, hBmShield); goto paintUnpickedProp; 
-                        case Prop::propType::addtnt: SelectObject(hdcObj, hBmAddTnt); goto paintUnpickedProp; 
-                        case Prop::propType::addlife: SelectObject(hdcObj, hBmAddLife); goto paintUnpickedProp; 
-                        case Prop::propType::shoe: SelectObject(hdcObj, hBmShoe); goto paintUnpickedProp; 
-                        case Prop::propType::jinKeLa: SelectObject(hdcObj, hBmJinKeLa); goto paintUnpickedProp; 
-                        case Prop::propType::fire: SelectObject(hdcObj, hBmFire); goto paintUnpickedProp; 
-                        case Prop::propType::ice: SelectObject(hdcObj, hBmIce); goto paintUnpickedProp; 
-                        paintUnpickedProp: 
+                        case Prop::propType::glove: SelectObject(hdcObj, hBmGlove); goto paintUnpickedProp;
+                        case Prop::propType::shield: SelectObject(hdcObj, hBmShield); goto paintUnpickedProp;
+                        case Prop::propType::addtnt: SelectObject(hdcObj, hBmAddTnt); goto paintUnpickedProp;
+                        case Prop::propType::addlife: SelectObject(hdcObj, hBmAddLife); goto paintUnpickedProp;
+                        case Prop::propType::shoe: SelectObject(hdcObj, hBmShoe); goto paintUnpickedProp;
+                        case Prop::propType::jinKeLa: SelectObject(hdcObj, hBmJinKeLa); goto paintUnpickedProp;
+                        case Prop::propType::fire: SelectObject(hdcObj, hBmFire); goto paintUnpickedProp;
+                        case Prop::propType::ice: SelectObject(hdcObj, hBmIce); goto paintUnpickedProp;
+                        paintUnpickedProp:
                             if (pProp->IsUnpicked())
                                 BitBlt(hdcMem, yp + (objSize - propSize) / 2, xp + (objSize - propSize) / 2, propSize, propSize, hdcObj, 0, 0, SRCCOPY);
-                            break; 
+                            break;
                         case Prop::propType::mine:
                             if (pProp->IsUnpicked())
                             {
@@ -1473,20 +1578,129 @@ void UI::Paint(HWND hWnd, const BOOL calledByPaintMessage)
                                 BitBlt(hdcMem, yp + (objSize - propSize) / 2, xp + (objSize - propSize) / 2, propSize, propSize, hdcObj, propSize, 0, SRCCOPY);
                             }
                             break;
-                        case Prop::propType::grenade: SelectObject(hdcObj, hBmGrenade); goto printFlyingProp; 
-                        case Prop::propType::missile: SelectObject(hdcObj, hBmMissile); goto printFlyingProp; 
-                        printFlyingProp: 
-                            if (pProp->IsUnpicked()) 
-                                BitBlt(hdcMem, yp + (objSize - propSize) / 2, xp + (objSize - propSize) / 2, propSize, propSize, hdcObj, 0, 0, SRCCOPY); 
+                        case Prop::propType::grenade: SelectObject(hdcObj, hBmGrenade); goto printFlyingProp;
+                        case Prop::propType::missile: SelectObject(hdcObj, hBmMissile); goto printFlyingProp;
+                        printFlyingProp:
+                            if (pProp->IsUnpicked())
+                                BitBlt(hdcMem, yp + (objSize - propSize) / 2, xp + (objSize - propSize) / 2, propSize, propSize, hdcObj, 0, 0, SRCCOPY);
                             else if (pProp->IsLaid())
-                                BitBlt(hdcMem, yp + (objSize - propSize) / 2, xp + (objSize - propSize) / 2, propSize, propSize, hdcObj, propSize, 0, SRCCOPY); 
-                            break; 
+                                BitBlt(hdcMem, yp + (objSize - propSize) / 2, xp + (objSize - propSize) / 2, propSize, propSize, hdcObj, propSize, 0, SRCCOPY);
+                            break;
                         }
-                        break; 
+                        break;
                     }
                     }
                 }
             }
+        }
+
+        SelectObject(hdcObj, hBmObstacle); 
+        for (int i = cols; i * objSize < mainWndSize.x; ++i)
+            for (int j = 0; j < rows; ++j)
+                BitBlt(hdcMem, i * objSize, j * objSize, objSize, objSize, hdcObj, objSize, 0, SRCCOPY); 
+        
+        int fontHeight = 40; 
+
+        //打印关数
+        HFONT hF = CreateFont
+        (
+            fontHeight,
+            0,
+            0,
+            0,
+            FW_HEAVY,
+            0,
+            0,
+            0,
+            GB2312_CHARSET,
+            OUT_DEFAULT_PRECIS,
+            CLIP_DEFAULT_PRECIS,
+            DEFAULT_QUALITY,
+            DEFAULT_PITCH,
+            TEXT("隶书")
+        ); 
+        HFONT hFOld = (HFONT)SelectObject(hdcMem, hF); 
+        SetTextColor(hdcMem, RGB(255, 255, 255)); 
+        SetBkColor(hdcMem, RGB(16, 11, 26)); 
+        int nowLevel = pGame->GetNowLevel() + 1; 
+        std::_tostringstream levelStr; 
+        levelStr << TEXT("第 ") << nowLevel << TEXT(" 关"); 
+        RECT rc = { 15 * objSize, 0, mainWndSize.x, mainWndSize.y };
+        DrawText(hdcMem, levelStr.str().c_str(), levelStr.str().length(), &rc, DT_CENTER);
+
+        //打印角色信息
+        for (int i = 0; i < 4; ++i)
+        {
+            const Role* pRole = pGame->GetRole(i + 1); 
+            POINT rolePaintPos = { 15 * objSize, fontHeight + i * (mainWndSize.y - fontHeight) / 4 };
+            SelectObject(hdcObj, hBmRole); 
+            BitBlt(hdcMem, rolePaintPos.x, rolePaintPos.y,
+                objSize, objSize, hdcObj, i * objSize, 4 * objSize, SRCCOPY); 
+            //拥有武器
+            SpecialBomb* pWeapon = pRole->GetWeapon();
+            if (pWeapon)
+            {
+                switch (pWeapon->GetPropType())
+                {
+                case Prop::propType::lachrymator: SelectObject(hdcObj, hBmLachrymator); goto paintWeapon;
+                case Prop::propType::mine: SelectObject(hdcObj, hBmMine); goto paintWeapon;
+                case Prop::propType::fire: SelectObject(hdcObj, hBmFire); goto paintWeapon;
+                case Prop::propType::ice: SelectObject(hdcObj, hBmIce); goto paintWeapon;
+                case Prop::propType::missile: SelectObject(hdcObj, hBmMissile); goto paintWeapon;
+                case Prop::propType::grenade: SelectObject(hdcObj, hBmGrenade); goto paintWeapon;
+                paintWeapon: BitBlt(hdcMem, rolePaintPos.x + 1 * objSize + (objSize - propSize) / 2, rolePaintPos.y + (objSize - propSize) / 2,
+                    propSize, propSize, hdcObj, 0, 0, SRCCOPY);
+                }
+            }
+            //手套
+            if (pRole->CanPushTnt())
+            {
+                SelectObject(hdcObj, hBmGlove); 
+                BitBlt(hdcMem, rolePaintPos.x + 2 * objSize + (objSize - propSize) / 2, rolePaintPos.y + (objSize - propSize) / 2, 
+                propSize, propSize, hdcObj, 0, 0, SRCCOPY); 
+            }
+            //盾牌
+            if (pRole->HaveShield())
+            {
+                SelectObject(hdcObj, hBmShield);
+                BitBlt(hdcMem, rolePaintPos.x + 3 * objSize + (objSize - propSize) / 2, rolePaintPos.y + (objSize - propSize) / 2,
+                    propSize, propSize, hdcObj, 0, 0, SRCCOPY);
+            }
+            
+            hF = CreateFont
+            (
+                fontHeight / 2,
+                0,
+                0,
+                0,
+                FW_HEAVY,
+                0,
+                0,
+                0,
+                GB2312_CHARSET,
+                OUT_DEFAULT_PRECIS,
+                CLIP_DEFAULT_PRECIS,
+                DEFAULT_QUALITY,
+                DEFAULT_PITCH,
+                TEXT("隶书")
+            );
+
+            DeleteObject(SelectObject(hdcMem, hF)); 
+
+            //生命数
+            std::_tostringstream lifeStr;
+            
+            lifeStr << TEXT("生命：") << pRole->GetLife(); 
+            rc.left = rolePaintPos.x + objSize; rc.right = mainWndSize.x; rc.top = rolePaintPos.y + objSize; rc.bottom = rolePaintPos.y + objSize * 2; 
+            DrawText(hdcMem, lifeStr.str().c_str(), lifeStr.str().length(), &rc, DT_LEFT); 
+            //分数
+            std::_tostringstream scoreStr;
+            scoreStr << TEXT("分数：") << pRole->GetNowScore(); 
+            rc.left = rolePaintPos.x + objSize; rc.right = mainWndSize.x; rc.top = rolePaintPos.y + 2 * objSize; rc.bottom = rolePaintPos.y + objSize * 3;
+            DrawText(hdcMem, scoreStr.str().c_str(), scoreStr.str().length(), &rc, DT_LEFT);
+        }
+        SelectObject(hdcMem, hFOld);
+        DeleteObject(hF);
         break; 
     }
     }
@@ -1532,5 +1746,80 @@ UI::~UI()
         Sleep(800);
         delete pGame;
         pGame = nullptr;
+    }
+}
+
+bool UI::StartGameDlg::Begin(HINSTANCE hInstance, HWND hWndParent)
+{
+    Init(hInstance, MAKEINTRESOURCE(STARTGAME_DIALOG), hWndParent); 
+    return choose; 
+}
+
+void UI::StartGameDlg::MessageProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
+{
+    switch (message)
+    {
+    case WM_INITDIALOG: 
+        DisableButton(IDC_PLAYER2_RED); 
+        DisableButton(IDC_PLAYER2_YELLOW);
+        DisableButton(IDC_PLAYER2_GREEN);
+        DisableButton(IDC_PLAYER2_BLUE);
+        choose = false; 
+        break; 
+    case WM_COMMAND:
+        switch (LOWORD(wParam))
+        {
+        case IDC_SINGLE:
+            if (IsButtonCheck(IDC_SINGLE))
+            {
+                DisableButton(IDC_PLAYER2_RED); DisableButton(IDC_PLAYER2_YELLOW);
+                DisableButton(IDC_PLAYER2_GREEN); DisableButton(IDC_PLAYER2_BLUE);
+            }
+            break;
+        case IDC_DOUBLE:
+            if (IsButtonCheck(IDC_DOUBLE))
+            {
+                EnableButton(IDC_PLAYER2_RED); EnableButton(IDC_PLAYER2_YELLOW);
+                EnableButton(IDC_PLAYER2_GREEN); EnableButton(IDC_PLAYER2_BLUE);
+            }
+            break;
+        case IDC_PLAYER1_RED: SetUnChecked(IDC_PLAYER2_RED); break; 
+        case IDC_PLAYER1_YELLOW: SetUnChecked(IDC_PLAYER2_YELLOW); break;
+        case IDC_PLAYER1_GREEN: SetUnChecked(IDC_PLAYER2_GREEN); break;
+        case IDC_PLAYER1_BLUE: SetUnChecked(IDC_PLAYER2_BLUE); break;
+        case IDC_PLAYER2_RED: SetUnChecked(IDC_PLAYER1_RED); break;
+        case IDC_PLAYER2_YELLOW: SetUnChecked(IDC_PLAYER1_YELLOW); break;
+        case IDC_PLAYER2_GREEN: SetUnChecked(IDC_PLAYER1_GREEN); break;
+        case IDC_PLAYER2_BLUE: SetUnChecked(IDC_PLAYER1_BLUE); break;
+        case IDCANCEL: choose = false; EndDialog(hDlg, 0); break; 
+        case IDOK: 
+            if (IsButtonCheck(IDC_EASY)) difficulty = Difficulty::easy;
+            else if (IsButtonCheck(IDC_MEDIUM)) difficulty = Difficulty::mediem;
+            else if (IsButtonCheck(IDC_DIFFICULT)) difficulty = Difficulty::difficult;
+            else { MessageBox(hDlg, TEXT("请选择难度！\nPlease choose difficulty!"), TEXT("Warning"), MB_OK | MB_ICONWARNING); break; }
+            if (IsButtonCheck(IDC_SINGLE)) numOfPlayer = 1;
+            else if (IsButtonCheck(IDC_DOUBLE)) numOfPlayer = 2; 
+            else { MessageBox(hDlg, TEXT("请选择游戏人数！\nPlease choose the number of players"), TEXT("Warning"), MB_OK | MB_ICONWARNING); break; }
+
+            if (IsButtonCheck(IDC_PLAYER1_RED)) player1ID = 1;
+            else if (IsButtonCheck(IDC_PLAYER1_YELLOW)) player1ID = 2;
+            else if (IsButtonCheck(IDC_PLAYER1_GREEN)) player1ID = 3;
+            else if (IsButtonCheck(IDC_PLAYER1_BLUE)) player1ID = 4;
+            else { MessageBox(hDlg, TEXT("请选择Player1！\nPlease choose Player1"), TEXT("Warning"), MB_OK | MB_ICONWARNING); break; }
+
+            if (numOfPlayer == 2)
+            {
+                if (IsButtonCheck(IDC_PLAYER2_RED)) player2ID = 1;
+                else if (IsButtonCheck(IDC_PLAYER2_YELLOW)) player2ID = 2;
+                else if (IsButtonCheck(IDC_PLAYER2_GREEN)) player2ID = 3;
+                else if (IsButtonCheck(IDC_PLAYER2_BLUE)) player2ID = 4;
+                else { MessageBox(hDlg, TEXT("请选择Player2！\nPlease choose Player2"), TEXT("Warning"), MB_OK | MB_ICONWARNING); break; }
+            }
+             
+            choose = true; 
+            EndDialog(hDlg, 0); 
+            break;
+        }
+        break; 
     }
 }

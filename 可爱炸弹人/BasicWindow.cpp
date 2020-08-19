@@ -4,9 +4,11 @@ BOOL BasicWindow::Init
 (
     HINSTANCE hInstance, int nCmdShow,
     int x, int y, int cx, int cy, DWORD dwStyle,
-    LPCTSTR c_lpszWndTitle, WNDCLASSEX wcex
+    LPCTSTR c_lpszWndTitle, WNDCLASSEX wcex, LPCTSTR c_lpszAccel
 )
 {
+    m_hWnd = NULL; 
+
     wcex.lpfnWndProc = WndProc; 
     if (!RegisterClassEx(&wcex))
     {
@@ -21,19 +23,21 @@ BOOL BasicWindow::Init
         return FALSE;
     }
 
+    if (c_lpszAccel) m_hAccel = LoadAccelerators(hInstance, c_lpszAccel); 
+
 	return TRUE; 
 }
 
 
 //
-//   函数: InitInstance(HINSTANCE, int)
+//   函数: InitInstance
 //
 //   目标: 保存实例句柄、主窗口句柄并创建主窗口
 //
 
 BOOL BasicWindow::InitInstance(HINSTANCE hInstance, int nCmdShow, int x, int y, int cx, int cy, DWORD dwStyle, LPCTSTR c_lpszWndClassName, LPCTSTR c_lpszWndTitle)
 {
-    m_hInst = hInstance;  //将实例句柄存储在全局变量中
+    m_hInst = hInstance;  //将实例句柄存储在成员变量中
 
     HWND hWnd = CreateWindow(c_lpszWndClassName, c_lpszWndTitle, dwStyle,
         x, y, cx, cy, NULL, NULL, hInstance, this); 
@@ -66,12 +70,13 @@ LRESULT CALLBACK BasicWindow::WndProc(HWND hWnd, UINT message, WPARAM wParam, LP
         if (message == WM_DESTROY)
         {
             thisWnd->m_hWnd = NULL; 
+            thisWnd->m_hInst = NULL; 
             PostQuitMessage(0); 
             return 0; 
         }
         else return DefWindowProc(hWnd, message, wParam, lParam); 
     }
-    if (message == WM_DESTROY) thisWnd->m_hWnd = NULL; 
+    if (message == WM_DESTROY) { thisWnd->m_hWnd = NULL; thisWnd->m_hInst; }
     return 0; 
 }
 

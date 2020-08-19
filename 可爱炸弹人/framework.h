@@ -22,7 +22,17 @@
 
 #include <cstdlib>
 #include <string>
+#include <sstream>
 
+#ifdef _UNICODE
+#define _tstring wstring
+#define _tistringstream wistringstream
+#define _tostringstream wostringstream
+#else					//#ifdef _UNICODE
+#define _tstring string
+#define _tistringstream istringstream
+#define _tostringstream ostringstream
+#endif					//#ifdef _UNICODE
 
 #endif // #ifndef FRAMEWORK_H
 

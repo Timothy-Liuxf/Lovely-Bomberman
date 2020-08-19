@@ -2,6 +2,10 @@
 // Microsoft Visual C++ 生成的包含文件。
 // 供 可爱炸弹人.rc 使用
 //
+
+#ifndef RESOURCE_H
+#define RESOURCE_H
+
 #define IDM_START                       20
 #define IDM_PAUSE                       21
 #define IDM_END                         22
@@ -41,3 +45,5 @@
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif
+
+#endif //#ifndef RESOURCE_H

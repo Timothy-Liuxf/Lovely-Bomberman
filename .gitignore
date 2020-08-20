@@ -6,6 +6,12 @@
 /可爱炸弹人/*.cd
 /可爱炸弹人/imageMaker/
 /可爱炸弹人/soundMaker/
+/GameSound/Debug/
+/GameSound/Release/
+/GameSound/*.vcxproj
+/GameSound/*.vcxproj.*
+/GameSound/*.aps
+/GameSound/*.cd
 /test/
 /Debug/
 /Release/

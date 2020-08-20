@@ -19,6 +19,7 @@ public:
 		sigPosType x;
 		sigPosType y;
 		tagPosType(sigPosType x, sigPosType y) : x(x), y(y) {}
+		tagPosType(const tagPosType& orgPos) : x(orgPos.x), y(orgPos.y) {}
 	} posType;
 
 	enum class objType		//对象类型

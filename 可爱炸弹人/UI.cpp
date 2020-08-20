@@ -36,6 +36,7 @@ int UI::Begin(HINSTANCE hInstance, int nCmdShow)
     MSG msg;
 
     programState = programstate::starting;
+    PlayMainMusic(); 
 
     // 主消息循环:
     while (GetMessage(&msg, NULL, 0, 0))
@@ -125,11 +126,51 @@ bool UI::MessageProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             EnableMenuItem(hMenu, IDM_END, FALSE);
             break;
         }
+        case IDM_END: 
+            if (MessageBox(hWnd, TEXT("您真的要结束游戏吗？\nDo you really want to end this game?"),
+                TEXT("Confirm"), MB_YESNO | MB_ICONWARNING) == IDYES) EndGame(3); 
+            break; 
+        case IDM_RESTART: 
+            if (MessageBox(hWnd,
+                TEXT("您真的要重新开始吗？您的本次游戏进度将不会保留。\nDo you really want to end this game? Your game will NOT be saved."),
+                TEXT("Confirm"), MB_YESNO | MB_ICONWARNING) == IDYES)
+            {
+                EndGame(3); 
+                SendMessage(hWnd, WM_COMMAND, MAKEWPARAM(IDM_START, 0), 0); 
+            }
+            break; 
         case IDM_PAUSE: 
             programState = programstate::gamePulsing; 
             MessageBox(hWnd, TEXT("暂停中……\nPausing..."), TEXT("游戏暂停"), MB_OK); 
             programState = programstate::gaming;
             break; 
+        case IDM_LIST:
+        {
+            auto scoreList = ReadHighScore(); 
+            if (scoreList.size() != 6)
+            {
+                MessageBox(m_hWnd, TEXT("读取错误"), c_lpszError, MB_OK | MB_ICONERROR); 
+                break; 
+            }
+            std::_tostringstream outStr; 
+            if constexpr (std::is_same<std::_tostringstream, std::wostringstream>::value) outStr.imbue(std::locale("chs")); 
+            outStr << TEXT("单人：\n简单：") << scoreList[0].second << TEXT("\t") << scoreList[0].first << TEXT("\n"); 
+            outStr << TEXT("中等：") << scoreList[1].second << TEXT("\t") << scoreList[1].first << TEXT("\n");
+            outStr << TEXT("困难：") << scoreList[2].second << TEXT("\t") << scoreList[2].first << TEXT("\n");
+            outStr << TEXT("\n"); 
+            outStr << TEXT("双人：\n简单：") << scoreList[3].second << TEXT("\t") << scoreList[3].first << TEXT("\n");
+            outStr << TEXT("中等：") << scoreList[4].second << TEXT("\t") << scoreList[4].first << TEXT("\n");
+            outStr << TEXT("困难：") << scoreList[5].second << TEXT("\t") << scoreList[5].first << TEXT("\n");
+            MessageBox(hWnd, outStr.str().c_str(), TEXT("高分榜"), MB_OK); 
+            break; 
+        }
+        case IDM_HELP: 
+        {
+            MessageBox(m_hWnd, c_lpszHelp, TEXT("帮助"), MB_OK | MB_ICONQUESTION); 
+            MessageBox(m_hWnd, c_lpszHelpProp, TEXT("道具系统"), MB_OK | MB_ICONQUESTION);
+            MessageBox(m_hWnd, c_lpszHelpScore, TEXT("分数系统"), MB_OK | MB_ICONQUESTION);
+            break; 
+        }
         case IDM_ABOUT: 
             MessageBox(hWnd, c_lpszAbout, TEXT("About"), MB_OK | MB_ICONINFORMATION); 
             break; 
@@ -140,7 +181,7 @@ bool UI::MessageProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         break; 
     }
     case WM_CLOSE: 
-        if (MessageBox(hWnd, TEXT("你确定要退出吗？\nAre you sure to quit?"), TEXT("Exit"), MB_YESNO | MB_ICONQUESTION) == IDYES)
+        if (MessageBox(hWnd, TEXT("您确定要退出吗？\nAre you sure to quit?"), TEXT("Exit"), MB_YESNO | MB_ICONQUESTION) == IDYES)
             SendMessage(hWnd, WM_DESTROY, 0, 0);
         break; 
     default: 
@@ -230,6 +271,20 @@ void UI::CreateBuffer(HWND hWnd)
     ReleaseDC(hWnd, hdc); 
 }
 
+void UI::PlayMainMusic()
+{
+loadMainMusic: 
+    WIN32_FIND_DATA wfd; 
+    if (FindFirstFile(MAIN_MUSIC_PATH, &wfd) == INVALID_HANDLE_VALUE)
+    {
+        switch (MessageBox(m_hWnd, MAIN_MUSIC_LOAD_FAIL_STR, c_lpszError, MB_RETRYCANCEL | MB_ICONERROR))
+        {
+        case IDRETRY: goto loadMainMusic; break;
+        }
+    }
+    else PlaySound(MAIN_MUSIC_PATH, NULL, SND_ASYNC | SND_LOOP); 
+}
+
 void UI::ScanData()
 {
     while (programState == programstate::gaming || programState == programstate::gamePulsing)
@@ -238,9 +293,10 @@ void UI::ScanData()
         pGame->CheckRole(); 
         pGame->CheckBomb(1000 / dataFps); 
         Sleep(1000 / dataFps); 
-        if (pGame->CheckGameEnd())
+        int result = pGame->CheckGameEnd(); 
+        if (result)
         {
-            std::thread end(&UI::EndGame, this); 
+            std::thread end(&UI::EndGame, this, result); 
             end.detach(); 
             break; 
         }
@@ -292,40 +348,144 @@ void UI::RefreshScreen()
     }
 }
 
-void UI::EndGame()
+void UI::EndGame(int result)
 {
-    programState = programstate::starting; 
-    MessageBox(m_hWnd, TEXT("游戏结束"), NULL, MB_OK); 
-    
-    //等待异步结束
-    if (pScanDataTask)
+    programState = programstate::changeLevel; 
+
+    std::function<void(void)> waitTask = [this]()
     {
-        pScanDataTask->wait(); delete pScanDataTask; pScanDataTask = nullptr;
-    }
-    if (pRefreshScreenTask)
-    {
-        pRefreshScreenTask->wait(); delete pRefreshScreenTask; pRefreshScreenTask = nullptr;
-    }
-    
-    for (auto& pRoleControl : pRoleControlTasks)
-    {
-        if (pRoleControl)
+        //等待异步结束
+        if (pScanDataTask)
         {
-            pRoleControl->wait(); delete pRoleControl; pRoleControl = nullptr;
+            pScanDataTask->wait(); delete pScanDataTask; pScanDataTask = nullptr;
+        }
+        if (pRefreshScreenTask)
+        {
+            pRefreshScreenTask->wait(); delete pRefreshScreenTask; pRefreshScreenTask = nullptr;
+        }
+
+        for (auto& pRoleControl : pRoleControlTasks)
+        {
+            if (pRoleControl)
+            {
+                pRoleControl->wait(); delete pRoleControl; pRoleControl = nullptr;
+            }
+        }
+        Sleep(1000);
+    }; 
+
+    std::function<void(void)> beginGame = [this]()
+    {
+        programState = programstate::gaming;
+        pScanDataTask = new std::future<void>(std::async(&UI::ScanData, this));
+        pRefreshScreenTask = new std::future<void>(std::async(&UI::RefreshScreen, this));
+        pRoleControlTasks[1] = new std::future<void>(std::async(&UI::RoleControl, this, pGame->GetID1()));    //角色1
+        if (startGameDlg.NumOfPlayer() == 2)
+        {
+            pRoleControlTasks[2] = new std::future<void>(std::async(&UI::RoleControl, this, pGame->GetID2()));    //角色2
+            int i = 3;
+            for (int j = 1; j <= 4; ++j)
+            {
+                if (j == pGame->GetID1() || j == pGame->GetID2()) continue;
+                pRoleControlTasks[i] = new std::future<void>(std::async(&UI::AI, this, j));
+                ++i;
+            }
+        }
+        else if (startGameDlg.NumOfPlayer() == 1)
+        {
+            int i = 2;
+            for (int j = 1; j <= 4; ++j)
+            {
+                if (j == pGame->GetID1()) continue;
+                pRoleControlTasks[i] = new std::future<void>(std::async(&UI::AI, this, j));
+                ++i;
+            }
+        }
+    }; 
+
+    std::function<void(void)> endGame = [this]()
+    {
+        programState = programstate::starting; 
+
+        delete pGame;
+        pGame = nullptr;
+
+        HMENU hMenu = GetMenu(m_hWnd);
+        EnableMenuItem(hMenu, IDM_START, FALSE);
+        EnableMenuItem(hMenu, IDM_RESTART, TRUE);
+        EnableMenuItem(hMenu, IDM_PAUSE, TRUE);
+        EnableMenuItem(hMenu, IDM_END, TRUE);
+        InvalidateRect(m_hWnd, NULL, FALSE);
+    }; 
+
+    int totalScore = 0; 
+    std::_tostringstream outStr; 
+    if constexpr (std::is_same<std::_tostringstream, std::wostringstream>::value) outStr.imbue(std::locale("chs"));
+    int nowLevel = pGame->GetNowLevel();
+
+    if (result == 1)    //玩家获胜
+    {
+        SuccessSound(); 
+        waitTask(); 
+        pGame->InitNewLevel(nowLevel, true);
+        totalScore += pGame->GetRole(pGame->GetID1())->GetTotalScore();
+        if (pGame->GetNumOfPlayer() == 2) totalScore += pGame->GetRole(pGame->GetID2())->GetTotalScore();
+        if (nowLevel == pGame->GetNumOfLevel() - 1)     //通关
+        {
+            outStr << TEXT("恭喜通关！总分：") << totalScore << TEXT("\nCongratulations! Total score: ") << totalScore; 
+            MessageBox(m_hWnd, outStr.str().c_str(), TEXT("Congratulations!"), MB_OK);
+            newScore(pGame->GetNumOfPlayer(), pGame->GetDifficulty(), totalScore);
+            endGame(); 
+        }
+        else
+        {
+            //进入下一关，开启新future
+            ++nowLevel; 
+            outStr << TEXT("你赢了，即将进入下一关。当前总分：") << totalScore << TEXT("\nYou win! Total score: ") << totalScore;
+            MessageBox(m_hWnd, outStr.str().c_str(), TEXT("You win!"), MB_OK); 
+            pGame->InitNewLevel(nowLevel, true); 
+            beginGame(); 
         }
     }
-    Sleep(800); 
+    else if (result == 2)  //电脑获胜
+    {
+        FailSound(); 
+        bool end = true; 
+        if (pGame->GetRole(pGame->GetID1())->GetLife() > 0
+            || pGame->GetNumOfPlayer() == 2 && pGame->GetRole(pGame->GetID2())->GetLife() > 0) end = false; 
 
-    delete pGame; 
-    pGame = nullptr; 
+        totalScore += pGame->GetRole(pGame->GetID1())->GetTotalScore();
+        if (pGame->GetNumOfPlayer() == 2) totalScore += pGame->GetRole(pGame->GetID2())->GetTotalScore();
 
+        if (end)        //如果结束了
+        {
 
-    HMENU hMenu = GetMenu(m_hWnd); 
-    EnableMenuItem(hMenu, IDM_START, FALSE);
-    EnableMenuItem(hMenu, IDM_RESTART, TRUE);
-    EnableMenuItem(hMenu, IDM_PAUSE, TRUE);
-    EnableMenuItem(hMenu, IDM_END, TRUE);
-    InvalidateRect(m_hWnd, NULL, FALSE); 
+            outStr << TEXT("你失败了！最终分数：") << totalScore << TEXT("\nYou fail! Ultimate score: ") << totalScore; 
+            MessageBox(m_hWnd, outStr.str().c_str(), TEXT("You fail!"), MB_OK); 
+            newScore(pGame->GetNumOfPlayer(), pGame->GetDifficulty(), totalScore);
+            waitTask(); 
+            endGame(); 
+        }
+        else            //还没结束
+        {
+            outStr << TEXT("你输了！点击重新开始本关。当前分数：") << totalScore << TEXT("\nYou lose! Click to restart this level. Total score: ") << totalScore;
+            MessageBox(m_hWnd, outStr.str().c_str(), TEXT("You lose!"), MB_OK);
+            waitTask();
+            pGame->InitNewLevel(nowLevel, false); 
+            beginGame(); 
+        }
+    }
+    else if (result == 3)   //玩家主动结束游戏
+    {
+        FailSound(); 
+        totalScore += pGame->GetRole(pGame->GetID1())->GetTotalScore();
+        if (pGame->GetNumOfPlayer() == 2) totalScore += pGame->GetRole(pGame->GetID2())->GetTotalScore(); 
+        outStr << TEXT("游戏结束！总分：") << totalScore << TEXT("\nGame over! Total score: ") << totalScore;
+        MessageBox(m_hWnd, outStr.str().c_str(), TEXT("Game over!"), MB_OK);
+        newScore(pGame->GetNumOfPlayer(), pGame->GetDifficulty(), totalScore); 
+        waitTask();
+        endGame(); 
+    }
 }
 
 void UI::AI(int roleID)
@@ -1434,6 +1594,124 @@ void UI::AI(int roleID)
 
 }
 
+std::vector<std::pair<std::_tstring, int>> UI::ReadHighScore() const
+{
+    WIN32_FIND_DATA wfd; 
+    HANDLE hFile; 
+    std::vector<std::pair<std::_tstring, int>> res;
+    std::_tstring name;
+    int score;
+    std::_tifstream fin; 
+    if constexpr (std::is_same<std::_tifstream, std::wifstream>::value) fin.imbue(std::locale("chs"));
+    if ((hFile = FindFirstFile(HIGH_SCORE_DIRECTORY, &wfd)) == INVALID_HANDLE_VALUE)
+    {
+        CreateDirectory(HIGH_SCORE_DIRECTORY, NULL);    //文件夹不存在
+        goto endRead; 
+    }
+
+    //是文件而不是文件夹
+    if (!(wfd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
+    {
+        if (MessageBox(m_hWnd, TEXT("文件“data”不正确，是否将其删除？\nIt is a wrong that the file \"") HIGH_SCORE_DIRECTORY TEXT("\" exists. Delete it?"),
+            c_lpszError, MB_YESNO | MB_ICONERROR) == IDYES)
+        {
+            DeleteFile(HIGH_SCORE_DIRECTORY); 
+            CreateDirectory(HIGH_SCORE_DIRECTORY, NULL);
+        }
+        goto endRead;
+    }
+    
+    //文件不存在
+    if (FindFirstFile(HIGH_SCORE_PATH, &wfd) == INVALID_HANDLE_VALUE) goto endRead;
+    fin.open(HIGH_SCORE_PATH, std::ios::in); 
+    if (!fin) goto endRead;     //读取失败
+
+    //读取
+    for (int i = 0; i < 6; ++i)
+    {
+        std::getline(fin, name); 
+        fin >> score; 
+        while (fin.get() != TEXT('\n') && fin); 
+        if (!fin) { fin.close(); goto endRead; }   //读取失败
+        res.emplace_back(name, score); 
+    }
+    fin.close(); 
+
+    endRead: 
+
+    if (res.size() != 6 )          //没有存档
+    {
+        res.clear(); 
+        for (int i = 0; i < 6; ++i)
+            res.emplace_back(TEXT("未命名"), 0);
+    }
+
+    return res; 
+}
+
+void UI::SaveHighScore(const std::vector<std::pair<std::_tstring, int>>& scoreList) const
+{
+    WIN32_FIND_DATA wfd;
+    HANDLE hFile;
+
+    std::function<void(void)> saveError = [this]()
+    {
+        MessageBox(m_hWnd, TEXT("写入存档错误"), c_lpszError, MB_ICONERROR | MB_OK);
+    }; 
+
+    if (scoreList.size() != 6)
+    {
+        saveError(); return; 
+    }
+    if ((hFile = FindFirstFile(HIGH_SCORE_DIRECTORY, &wfd)) == INVALID_HANDLE_VALUE)
+    {
+        CreateDirectory(HIGH_SCORE_DIRECTORY, NULL);    //文件夹不存在
+    }
+
+    //是文件而不是文件夹
+    if (!(wfd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
+    {
+        if (MessageBox(m_hWnd, TEXT("文件“data”不正确，是否将其删除？\nIt is a wrong that the file \"") HIGH_SCORE_DIRECTORY TEXT("\" exists. Delete it?"),
+            c_lpszError, MB_YESNO | MB_ICONERROR) == IDYES)
+        {
+            DeleteFile(HIGH_SCORE_DIRECTORY);
+            CreateDirectory(HIGH_SCORE_DIRECTORY, NULL);
+        }
+        else 
+        {
+            saveError(); return;
+        }
+    }
+
+    std::_tofstream fout(HIGH_SCORE_PATH, std::ios::out); 
+    if constexpr (std::is_same<std::wofstream, std::_tofstream>::value) fout.imbue(std::locale("chs")); 
+    if (!fout)
+    {
+        saveError(); return;
+    }
+    for (int i = 0; i < 6; ++i)
+        fout << scoreList[i].first << std::endl << scoreList[i].second << std::endl; 
+    fout.close(); 
+}
+
+void UI::newScore(int numOfPlayer, Game::Difficulty difficulty, int score)
+{
+    auto highScoreInfo = ReadHighScore(); 
+    int pos = 0; 
+    switch (difficulty)
+    {
+    case Game::Difficulty::easy: pos = 0 + (numOfPlayer - 1) * 3; break;
+    case Game::Difficulty::medium: pos = 1 + (numOfPlayer - 1) * 3; break;
+    case Game::Difficulty::difficult: pos = 2 + (numOfPlayer - 1) * 3; break;
+    }
+    if (highScoreInfo[pos].second < score)
+    {
+        inputName.Begin(m_hInst, m_hWnd); 
+        highScoreInfo[pos] = std::make_pair(inputName.GetName(), score); 
+        SaveHighScore(highScoreInfo); 
+    }
+}
+
 void UI::Paint(HWND hWnd, const BOOL calledByPaintMessage)
 {
     HDC hdc = NULL; 
@@ -1624,6 +1902,7 @@ void UI::Paint(HWND hWnd, const BOOL calledByPaintMessage)
         SetBkColor(hdcMem, RGB(16, 11, 26)); 
         int nowLevel = pGame->GetNowLevel() + 1; 
         std::_tostringstream levelStr; 
+        if constexpr (std::is_same<std::_tostringstream, std::wostringstream>::value) levelStr.imbue(std::locale("chs"));
         levelStr << TEXT("第 ") << nowLevel << TEXT(" 关"); 
         RECT rc = { 15 * objSize, 0, mainWndSize.x, mainWndSize.y };
         DrawText(hdcMem, levelStr.str().c_str(), levelStr.str().length(), &rc, DT_CENTER);
@@ -1689,12 +1968,15 @@ void UI::Paint(HWND hWnd, const BOOL calledByPaintMessage)
 
             //生命数
             std::_tostringstream lifeStr;
+
+            if constexpr (std::is_same<std::_tostringstream, std::wostringstream>::value) lifeStr.imbue(std::locale("chs"));
             
             lifeStr << TEXT("生命：") << pRole->GetLife(); 
             rc.left = rolePaintPos.x + objSize; rc.right = mainWndSize.x; rc.top = rolePaintPos.y + objSize; rc.bottom = rolePaintPos.y + objSize * 2; 
             DrawText(hdcMem, lifeStr.str().c_str(), lifeStr.str().length(), &rc, DT_LEFT); 
             //分数
             std::_tostringstream scoreStr;
+            if constexpr (std::is_same<std::_tostringstream, std::wostringstream>::value) scoreStr.imbue(std::locale("chs"));
             scoreStr << TEXT("分数：") << pRole->GetNowScore(); 
             rc.left = rolePaintPos.x + objSize; rc.right = mainWndSize.x; rc.top = rolePaintPos.y + 2 * objSize; rc.bottom = rolePaintPos.y + objSize * 3;
             DrawText(hdcMem, scoreStr.str().c_str(), scoreStr.str().length(), &rc, DT_LEFT);
@@ -1720,7 +2002,7 @@ void UI::Paint(HWND hWnd, const BOOL calledByPaintMessage)
 UI::~UI()
 {
     if(hBmMem) DeleteObject(hBmMem); 
-
+    
     programState = programstate::starting;
 
     //等待异步结束
@@ -1794,7 +2076,7 @@ void UI::StartGameDlg::MessageProc(HWND hDlg, UINT message, WPARAM wParam, LPARA
         case IDCANCEL: choose = false; EndDialog(hDlg, 0); break; 
         case IDOK: 
             if (IsButtonCheck(IDC_EASY)) difficulty = Difficulty::easy;
-            else if (IsButtonCheck(IDC_MEDIUM)) difficulty = Difficulty::mediem;
+            else if (IsButtonCheck(IDC_MEDIUM)) difficulty = Difficulty::medium;
             else if (IsButtonCheck(IDC_DIFFICULT)) difficulty = Difficulty::difficult;
             else { MessageBox(hDlg, TEXT("请选择难度！\nPlease choose difficulty!"), TEXT("Warning"), MB_OK | MB_ICONWARNING); break; }
             if (IsButtonCheck(IDC_SINGLE)) numOfPlayer = 1;
@@ -1819,6 +2101,36 @@ void UI::StartGameDlg::MessageProc(HWND hDlg, UINT message, WPARAM wParam, LPARA
             choose = true; 
             EndDialog(hDlg, 0); 
             break;
+        }
+        break; 
+    }
+}
+
+void UI::InputNameDlg::Begin(HINSTANCE hInstance, HWND hWndParent)
+{
+    Init(hInstance, MAKEINTRESOURCE(INPUTNAME_DIALOG), hWndParent); 
+}
+
+void UI::InputNameDlg::MessageProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
+{
+    switch (message)
+    {
+    case WM_COMMAND: 
+        switch (LOWORD(wParam))
+        {
+        case IDOK: 
+        {
+            TCHAR nameBuf[51]; 
+            GetDlgItemText(hDlg, IDC_NAMEEDIT, nameBuf, 50); 
+            name = nameBuf; 
+            if (name == TEXT(""))
+            {
+                MessageBox(hDlg, TEXT("名字不能为空！"), TEXT("Null name"), MB_OK | MB_ICONWARNING); 
+                break; 
+            }
+            EndDialog(hDlg, 0);
+            break;
+        }
         }
         break; 
     }

@@ -62,8 +62,17 @@ private:
 	void ScanData();					//扫描游戏数据
 	void RoleControl(int roleID);		//角色控制
 	void RefreshScreen();				//刷新屏幕
-	void EndGame();						//结束游戏
+	void EndGame(int result);			//结束游戏
 	void AI(int roleID);				//电脑AI
+
+	//读取高分
+	std::vector<std::pair<std::_tstring, int>> ReadHighScore() const;
+
+	//写入高分
+	void SaveHighScore(const std::vector<std::pair<std::_tstring, int>>& scoreList) const;
+	
+	//新分数
+	void newScore(int numOfPlayer, Game::Difficulty difficulty, int score); 
 
 	std::future<void>* pScanDataTask = nullptr; 
 	std::future<void>* pRefreshScreenTask = nullptr;
@@ -115,6 +124,7 @@ private:
 
 	bool LoadGameImg();					//加载位图
 	void CreateBuffer(HWND hWnd);		//创建缓冲位图
+	void PlayMainMusic();				//播放背景音乐
 
 	//开始画图
 	void Paint(HWND hWnd, BOOL calledByPaintMessage); 
@@ -122,7 +132,12 @@ private:
 	//人物坐标转图像坐标
 	int PosToPaint(int p) { return (int)(((double)p / Game::GetPosUnitPerCell() - 0.5) * objSize); }
 
-	//开始游戏对话框
+	////////////////////////////////////////////////////
+	//
+	// 子对话框
+	//
+
+	//开始游戏对话框类
 	class StartGameDlg : public BasicModalDialog
 	{
 	private: using Difficulty = Game::Difficulty; 
@@ -147,8 +162,20 @@ private:
 		int player2ID;					//2P的ID
 	};
 
-	StartGameDlg startGameDlg; 
+	//输入高手姓名对话框
+	class InputNameDlg : public BasicModalDialog
+	{
+	protected: 
+		virtual void MessageProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam) override;
+	public: 
+		void Begin(HINSTANCE hInstance, HWND hWndParent);
+		std::_tstring GetName() const { return name; }
+	private: 
+		std::_tstring name; 
+	};
 
+	StartGameDlg startGameDlg; 
+	InputNameDlg inputName; 
 };
 
 #endif	// #ifndef GLOBALS_H

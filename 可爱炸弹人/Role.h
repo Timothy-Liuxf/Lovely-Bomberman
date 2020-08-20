@@ -30,7 +30,9 @@ public:
 		isLiving(true), 
 		life(initialLife), 
 		initialLife(initialLife), 
-		direct(direction::Down) {}
+		direct(direction::Down), 
+		orgPos(x, y), 
+		orgMoveSpeed(moveSpeed) {}
 
 	virtual objType GetObjType() const override { return objType::role; }
 
@@ -165,6 +167,8 @@ private:
 	const int initialLife;	//初始生命数
 	SpecialBomb* weapon;	//手中持有的武器
 	direction direct;		//朝向
+	const posType orgPos;	//原先的位置
+	const int orgMoveSpeed; //原先的移动速度
 
 	void SetDirect(direction newDirect) { direct = newDirect; }
 

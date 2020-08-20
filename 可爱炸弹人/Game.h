@@ -6,6 +6,7 @@
 #include "Obstacle.h"
 #include "TNT.h"
 #include "BombArea.h"
+#include "Sound.h"
 #include <ctime>
 #include <random>
 #include <list>
@@ -15,10 +16,6 @@
 #include <utility>
 #include <thread>
 #include <functional>
-
-#ifdef _DEBUG
-#include <iostream>
-#endif
 
 class Game
 {
@@ -56,7 +53,7 @@ public:
 	enum class Difficulty
 	{
 		easy, 
-		mediem, 
+		medium, 
 		difficult
 	};
 
@@ -97,8 +94,8 @@ public:
 	void CheckRole(); 
 	//检查炸弹以及爆炸区域，多重锁
 	void CheckBomb(int dataScanInterval);
-	//检查游戏是否结束
-	bool CheckGameEnd() const; 
+	//检查游戏是否结束，1代表玩家获胜，2代表电脑获胜
+	int CheckGameEnd() const; 
 	
 	//获取随机数
 	auto GetRandom() { return randNum(); }

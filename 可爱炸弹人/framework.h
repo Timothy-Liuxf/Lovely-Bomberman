@@ -19,19 +19,27 @@
 
 #include <windows.h>
 #include <tchar.h>
+#include <mmsystem.h>
+#pragma comment(lib, "winmm.lib")
 
 #include <cstdlib>
 #include <string>
 #include <sstream>
+#include <fstream>
+#include <type_traits>
 
 #ifdef _UNICODE
 #define _tstring wstring
 #define _tistringstream wistringstream
 #define _tostringstream wostringstream
+#define _tifstream wifstream
+#define _tofstream wofstream
 #else					//#ifdef _UNICODE
 #define _tstring string
 #define _tistringstream istringstream
 #define _tostringstream ostringstream
+#define _tifstream ifstream
+#define _tofstream ofstream
 #endif					//#ifdef _UNICODE
 
 #endif // #ifndef FRAMEWORK_H

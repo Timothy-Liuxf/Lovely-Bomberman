@@ -14,7 +14,7 @@ const int Game::grenadeInitialTime = 100;					//手榴弹爆炸持续时间
 const int Game::fireMaxDistance = 3;						//火焰枪攻击距离
 const int Game::fireInitialTime = 500;						//火焰枪火焰持续时间
 const int Game::scoreOfDestroyObstacle = 1;					//摧毁障碍物得分
-const int Game::scoreOfHitOthers = 10;						//杀死其它角色得分
+const int Game::scoreOfHitOthers = 20;						//杀死其它角色得分
 const int Game::scoreOfPickProp = 2;						//捡道具得分
 
 //各特殊炸弹移动速度
@@ -31,7 +31,7 @@ const std::map<Prop::propType, obj_base::sigPosType> Game::propMoveSpeed
 //产生道具的代号
 const std::vector<Prop::propType> Game::propNums
 {
-	Prop::propType::null, Prop::propType::null, Prop::propType::null, Prop::propType::null, Prop::propType::null, //5个
+	Prop::propType::null, Prop::propType::null, Prop::propType::null, Prop::propType::null, Prop::propType::null, Prop::propType::null, //6个
 	Prop::propType::glove, Prop::propType::glove,Prop::propType::glove,Prop::propType::glove,Prop::propType::glove, //5个
 	Prop::propType::shield, Prop::propType::shield,	//2个
 	Prop::propType::addtnt, Prop::propType::addtnt, Prop::propType::addtnt, Prop::propType::addtnt, Prop::propType::addtnt, Prop::propType::addtnt, Prop::propType::addtnt, Prop::propType::addtnt, Prop::propType::addtnt, Prop::propType::addtnt,	//10个
@@ -44,25 +44,86 @@ const std::vector<Prop::propType> Game::propNums
 	////Prop::propType::ice,	//暂时没有写出冰的逻辑，不产生冰
 	Prop::propType::grenade, Prop::propType::grenade, Prop::propType::grenade, //3个
 	Prop::propType::missile, Prop::propType::missile, Prop::propType::missile, //3个
-	Prop::propType::null	//1个
+	Prop::propType::null, Prop::propType::null, Prop::propType::null, Prop::propType::null, Prop::propType::null, Prop::propType::null	//6个
 }; 
 
+//游戏地图，0是空，1是出生点，2是软障碍，3是硬障碍
 const std::vector<std::vector<std::vector<int>>> Game::gameMap
 {
 	{
-		{0, 0, 0, 0, 3, 2, 0, 0, 2, 0, 2, 2, 3, 0, 0}, 
-		{2, 2, 3, 2, 0, 0, 3, 3, 0, 3, 3, 0, 0, 2, 3}, 
-		{3, 2, 3, 0, 3, 3, 2, 3, 2, 0, 3, 0, 3, 2, 2}, 
-		{3, 0, 0, 1, 0, 0, 2, 2, 3, 0, 0, 1, 0, 0, 3}, 
-		{3, 0, 3, 0, 3, 0, 3, 2, 0, 0, 3, 0, 3, 2, 0}, 
-		{2, 0, 2, 0, 3, 2, 3, 3, 3, 0, 2, 2, 3, 3, 2}, 
-		{3, 0, 3, 2, 3, 0, 3, 3, 0, 3, 3, 0, 2, 3, 3}, 
-		{2, 0, 0, 0, 2, 3, 0, 3, 0, 0, 2, 0, 3, 2, 3}, 
-		{3, 0, 3, 0, 3, 3, 2, 2, 2, 3, 3, 0, 3, 0, 2}, 
-		{2, 0, 0, 1, 0, 2, 2, 3, 3, 0, 0, 1, 0, 0, 2}, 
-		{0, 3, 3, 0, 3, 3, 3, 3, 2, 2, 3, 0, 3, 2, 3}, 
-		{0, 2, 3, 0, 3, 2, 0, 2, 3, 0, 2, 2, 0, 2, 2}, 
+		{2, 0, 0, 3, 0, 3, 2, 2, 3, 2, 0, 3, 0, 3, 2}, 
+		{0, 3, 2, 0, 2, 0, 2, 0, 2, 2, 2, 0, 2, 2, 2}, 
+		{0, 3, 3, 0, 3, 3, 2, 3, 3, 0, 3, 0, 3, 2, 2}, 
+		{0, 0, 0, 1, 0, 0, 2, 0, 0, 2, 0, 1, 0, 0, 3}, 
+		{2, 2, 3, 0, 3, 2, 0, 3, 3, 2, 3, 0, 3, 2, 2}, 
+		{2, 3, 3, 2, 2, 0, 3, 3, 0, 2, 2, 2, 2, 2, 2}, 
+		{2, 0, 3, 3, 2, 3, 3, 3, 0, 3, 3, 3, 2, 3, 2}, 
+		{2, 2, 2, 0, 2, 2, 3, 2, 2, 0, 0, 2, 0, 3, 2}, 
+		{2, 3, 3, 0, 3, 0, 0, 0, 3, 2, 3, 0, 3, 3, 2}, 
+		{0, 2, 0, 1, 0, 2, 3, 2, 3, 0, 0, 1, 0, 2, 2}, 
+		{2, 3, 3, 0, 3, 0, 3, 2, 0, 2, 3, 0, 3, 3, 0}, 
+		{0, 2, 3, 0, 3, 2, 3, 0, 3, 2, 0, 2, 2, 2, 0}, 
+		{2, 2, 2, 2, 2, 0, 2, 2, 0, 2, 2, 3, 0, 3, 2} 
+	}, 
+	{
+		{0, 0, 0, 0, 3, 2, 0, 0, 2, 0, 2, 2, 3, 0, 0},
+		{2, 2, 3, 2, 0, 0, 3, 3, 0, 3, 3, 0, 0, 2, 3},
+		{3, 2, 3, 0, 3, 3, 2, 3, 2, 0, 3, 0, 3, 2, 2},
+		{3, 0, 0, 1, 0, 0, 2, 2, 3, 0, 0, 1, 0, 0, 3},
+		{3, 0, 3, 0, 3, 0, 3, 2, 0, 0, 3, 0, 3, 2, 0},
+		{2, 0, 2, 0, 3, 2, 3, 3, 3, 0, 2, 2, 3, 3, 2},
+		{3, 0, 3, 2, 3, 0, 3, 3, 0, 3, 3, 0, 2, 3, 3},
+		{2, 0, 0, 0, 2, 3, 0, 3, 0, 0, 2, 0, 3, 2, 3},
+		{3, 0, 3, 0, 3, 3, 2, 2, 2, 3, 3, 0, 3, 0, 2},
+		{2, 0, 0, 1, 0, 2, 2, 3, 3, 0, 0, 1, 0, 0, 2},
+		{0, 3, 3, 0, 3, 3, 3, 3, 2, 2, 3, 0, 3, 2, 3},
+		{0, 2, 3, 0, 3, 2, 0, 2, 3, 0, 2, 2, 0, 2, 2},
 		{2, 3, 2, 2, 0, 0, 3, 2, 0, 2, 3, 0, 2, 3, 0}
+	}, 
+	{
+		{2, 3, 2, 2, 0, 0, 2, 2, 2, 2, 2, 2, 2, 0, 0}, 
+		{2, 2, 0, 0, 3, 3, 3, 2, 3, 2, 3, 2, 3, 2, 3}, 
+		{2, 3, 3, 0, 3, 0, 2, 2, 2, 0, 3, 0, 3, 0, 2}, 
+		{2, 2, 0, 1, 0, 2, 3, 3, 2, 0, 0, 1, 0, 2, 2}, 
+		{3, 2, 3, 0, 3, 0, 0, 2, 2, 3, 3, 0, 3, 2, 3}, 
+		{2, 0, 2, 0, 2, 2, 3, 3, 0, 2, 0, 0, 2, 0, 2}, 
+		{0, 2, 3, 3, 0, 0, 3, 3, 3, 0, 0, 2, 2, 3, 3}, 
+		{0, 3, 3, 2, 2, 2, 2, 0, 2, 2, 3, 2, 2, 2, 2}, 
+		{0, 0, 3, 0, 3, 0, 3, 0, 3, 0, 3, 0, 3, 3, 2}, 
+		{2, 0, 0, 1, 0, 2, 0, 0, 0, 0, 0, 1, 0, 0, 2}, 
+		{0, 3, 3, 0, 3, 0, 3, 0, 3, 0, 3, 0, 3, 2, 3}, 
+		{2, 2, 0, 2, 2, 2, 3, 2, 3, 0, 3, 0, 2, 2, 2}, 
+		{0, 3, 0, 2, 3, 0, 0, 0, 2, 2, 0, 0, 3, 0, 0}
+	}, 
+	{
+		{2, 2, 0, 2, 2, 2, 3, 0, 2, 2, 2, 2, 3, 0, 2}, 
+		{2, 3, 2, 2, 3, 2, 3, 2, 3, 3, 3, 0, 2, 2, 0}, 
+		{2, 3, 3, 0, 3, 0, 2, 2, 0, 0, 3, 0, 3, 0, 3}, 
+		{0, 0, 0, 1, 0, 0, 3, 2, 3, 2, 0, 1, 0, 2, 2}, 
+		{2, 3, 3, 0, 3, 2, 2, 0, 3, 0, 3, 0, 3, 0, 3}, 
+		{0, 0, 0, 2, 0, 0, 3, 3, 0, 0, 2, 2, 3, 2, 0}, 
+		{0, 3, 3, 3, 3, 3, 3, 3, 2, 3, 3, 2, 3, 2, 3}, 
+		{2, 0, 2, 0, 0, 2, 2, 2, 0, 3, 2, 0, 2, 0, 2}, 
+		{0, 3, 3, 0, 3, 2, 3, 3, 2, 3, 3, 0, 3, 0, 3}, 
+		{2, 0, 0, 1, 0, 2, 0, 2, 3, 0, 0, 1, 0, 2, 2}, 
+		{0, 2, 3, 0, 3, 0, 3, 2, 3, 2, 3, 0, 3, 3, 0}, 
+		{2, 3, 3, 0, 3, 0, 2, 2, 2, 0, 3, 2, 2, 2, 2}, 
+		{0, 2, 2, 2, 0, 2, 3, 2, 3, 0, 0, 0, 3, 2, 0}
+	}, 
+	{
+		{2, 2, 2, 0, 2, 0, 0, 0, 2, 2, 3, 0, 3, 0, 0},
+		{2, 3, 0, 2, 3, 0, 3, 3, 3, 2, 2, 2, 2, 2, 0},
+		{0, 3, 3, 0, 3, 0, 3, 0, 3, 2, 3, 0, 3, 3, 2},
+		{2, 2, 0, 1, 0, 2, 0, 0, 2, 0, 0, 1, 0, 2, 0},
+		{3, 0, 3, 0, 3, 2, 3, 2, 3, 2, 3, 0, 3, 3, 0},
+		{0, 0, 3, 2, 0, 2, 3, 3, 3, 0, 2, 0, 3, 0, 0},
+		{3, 0, 0, 2, 3, 2, 3, 3, 2, 0, 3, 2, 2, 0,3 },
+		{2, 0, 3, 2, 3, 0, 3, 0, 3, 2, 2, 2, 3, 0, 0},
+		{3, 2, 3, 0, 3, 0, 0, 2, 2, 0, 3, 0, 3, 0, 3},
+		{2, 2, 0, 1, 0, 2, 3, 3, 2, 0, 0, 1, 0, 2, 2},
+		{2, 3, 3, 0, 3, 2, 2, 0, 0, 0, 3, 0, 3, 3, 2},
+		{2, 0, 2, 0, 0, 2, 3, 2, 3, 2, 0, 0, 2, 3, 0},
+		{2, 2, 3, 2, 3, 2, 2, 2, 0, 2, 3, 0, 0, 0, 2}
 	}
 }; 
 
@@ -110,9 +171,13 @@ void Game::InitNewLevel(int newLevel, bool mergeScore)
 {
 
 	//清空上一关的回收站
-	for (auto p : deletedObjs)
-		delete p;
+	for (auto p : deletedObjs) delete p;
 	deletedObjs.clear();
+	//清空上一关的障碍和物件
+	for (auto p : obstacles) delete p; 
+	obstacles.clear(); 
+	for (auto p : otherGameObjs) delete p; 
+	otherGameObjs.clear(); 
 
 	newLevel %= (int)gameMap.size();
 	nowLevel = newLevel; 
@@ -123,6 +188,10 @@ void Game::InitNewLevel(int newLevel, bool mergeScore)
 		{
 			if (mergeScore) roles[i]->MergeScore();
 			roles[i]->Reset(false, false);
+			if (difficulty == Difficulty::easy)
+			{
+				roles[i]->WearShield(); 
+			}
 		}
 		else roles[i]->Reset(true, true); 
 	}
@@ -408,7 +477,7 @@ void Game::CheckRole()
 	for (int i = 1; i <= 4; ++i)
 	{
 		//简单与中等难度的电脑不能拾取道具
-		if ((difficulty == Difficulty::easy || difficulty == Difficulty::mediem)
+		if ((difficulty == Difficulty::easy || difficulty == Difficulty::medium)
 			&& !(i == id1 || numOfPlayer == 2 && i == id2))	continue; 
 		pRole = roles[i]; 
 		if (!pRole->IsLiving()) continue;									//角色已经死亡
@@ -435,21 +504,27 @@ void Game::CheckRole()
 						{
 						case Prop::propType::glove:							//捡起手套
 							pRole->WearGlove(); 
+							PickPropSound(); 
 							break; 
 						case Prop::propType::shield:						//捡起盾牌
 							pRole->WearShield(); 
+							PickPropSound();
 							break; 
 						case Prop::propType::addtnt:						//加TNT数量
 							pRole->AddTntNum(); 
+							PickPropSound();
 							break; 
 						case Prop::propType::addlife:						//加生命值
 							pRole->AddLife(); 
+							PickPropSound();
 							break; 
 						case Prop::propType::shoe:							//加移动速度
 							pRole->AddMoveSpeed(); 
+							PickPropSound();
 							break; 
 						case Prop::propType::jinKeLa:						//增加炸弹爆炸范围
 							pRole->AddDistance(); 
+							PickPropSound();
 							break; 
 						}
 						pRole->AddNowScore(scoreOfPickProp); 
@@ -466,6 +541,7 @@ void Game::CheckRole()
 						pRole->SetWeapon(dynamic_cast<SpecialBomb*>(pProp)); 
 						pRole->GetMutex().unlock();
 						dynamic_cast<SpecialBomb*>(pProp)->SetPicked(pRole->GetID());	//设置为捡起状态
+						PickPropSound();
 						if (pPrevWeapon) { deletedObjsMutex.lock(); deletedObjs.push_back(pPrevWeapon); deletedObjsMutex.unlock(); }
 					}
 					break;										//捡起了道具，就不需要继续寻找了
@@ -740,7 +816,7 @@ void Game::CheckBomb(int dataScanInterval)
 	}
 }
 
-bool Game::CheckGameEnd() const
+int Game::CheckGameEnd() const
 {
 
 	bool playerWin = true; 
@@ -751,11 +827,11 @@ bool Game::CheckGameEnd() const
 		if (roles[i]->IsLiving()) { playerWin = false; break; }
 	}
 
-	if (playerWin) return true; 
+	if (playerWin) return 1; 
 
-	//如果电脑赢了
-	if (roles[id1]->IsLiving() || numOfPlayer == 2 && roles[id2]->IsLiving()) return false; 
-	return true; 
+	//如果电脑没有赢
+	if (roles[id1]->IsLiving() || numOfPlayer == 2 && roles[id2]->IsLiving()) return 0; 
+	return 2; 
 }
 
 void Game::BombTnt(TNT* pTnt)
@@ -820,6 +896,8 @@ void Game::BombTnt(TNT* pTnt)
 	deletedObjsMutex.lock(); 
 	deletedObjs.push_back(pTnt); 
 	deletedObjsMutex.unlock(); 
+
+	BombSound(); 
 }
 
 void Game::BombFire(Fire* pFire)
@@ -901,6 +979,7 @@ void Game::BombFire(Fire* pFire)
 
 	//把火焰枪放入回收站
 	deletedObjsMutex.lock(); deletedObjs.push_back(pFire); deletedObjsMutex.unlock(); 
+	BombSound();
 }
 
 void Game::BombGrenade(Grenade* pGrenade)
@@ -950,6 +1029,7 @@ void Game::BombGrenade(Grenade* pGrenade)
 	deletedObjsMutex.lock();
 	deletedObjs.push_back(pGrenade);
 	deletedObjsMutex.unlock();
+	BombSound();
 }
 
 void Game::BombMissile(Missile* pMissile)

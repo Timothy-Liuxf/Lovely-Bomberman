@@ -10,6 +10,8 @@ void Role::Reset(bool resetTotalScore, bool resetLife)
 	isMissing = false; 
 	weapon = NULL; 
 	nowScore = 0; 
+	moveSpeed = orgMoveSpeed; 
+	pos = orgPos;
 	if (resetTotalScore) totalScore = 0; 
 	if (resetLife) life = initialLife; 
 	if (life > 0) isLiving = true;

@@ -22,5 +22,5 @@
 /Release/
 /.vs/
 /x64/
-/*.zip/
+*.zip
 *.sln

@@ -51,6 +51,7 @@ static LPCTSTR c_lpszHelpScore = TEXT("·ÖÊıÏµÍ³£ºÓÎÏ·ÖĞÌØ¶¨ÊÂ¼ş»áÊ¹µÃ½ÇÉ«»ñµÃ·ÖÊ
 2.Ã¿¼ñµ½Ò»¸öµÀ¾ßµÃ2·Ö\n\
 3.Ã¿¹¥»÷µ½Ò»¸ö½ÇÉ«£¨²»±ØÉ±ËÀ£©µÃ20·Ö\n\
 ÖµµÃ×¢ÒâµÄÊÇ£¬Èç¹ûÍæ¼ÒÔÚÕâÒ»¹ØÖĞ»ñÊ¤£¬Ôò»á»ñµÃÕâÒ»¹ØµÃµ½µÄ·ÖÊı£»Èç¹ûÍæ¼ÒÊ§°Ü£¬Ôò²»»á»ñµÃÕâÒ»¹ØµÃµ½µÄ·ÖÊı"); 
+static LPCTSTR c_lpszHelpMusic = TEXT("´ò¿ªÉùÒôÓÎÏ·Ğ§¹û¸ü¼Ñ"); 
 
 //¸ß·Ö´æµµÂ·¾¶
 #define HIGH_SCORE_DIRECTORY TEXT("data")
@@ -80,5 +81,11 @@ static LPCTSTR c_lpszHelpScore = TEXT("·ÖÊıÏµÍ³£ºÓÎÏ·ÖĞÌØ¶¨ÊÂ¼ş»áÊ¹µÃ½ÇÉ«»ñµÃ·ÖÊ
 
 #define MAIN_MUSIC_PATH TEXT("sound\\mainmusic.wav")
 #define MAIN_MUSIC_LOAD_FAIL_STR TEXT("ÕÒ²»µ½ÉùÒô£º") MAIN_MUSIC_PATH TEXT("\nCannot find sound: ") MAIN_MUSIC_PATH
+
+#define BOMB_MUSIC_PATH TEXT("sound\\bomb.wav")
+#define SUCCESS_MUSIC_PATH TEXT("sound\\success.wav")
+#define FAIL_MUSIC_PATH TEXT("sound\\fail.wav")
+#define PICK_PROP_MUSIC_PATH TEXT("sound\\pickProp.wav")
+#define MUSIC_LOAD_FAIL_STR(path) TEXT("ÕÒ²»µ½ÉùÒô£º") path TEXT("\nCannot find sound: ") path
 
 #endif	// #ifndef STR_H

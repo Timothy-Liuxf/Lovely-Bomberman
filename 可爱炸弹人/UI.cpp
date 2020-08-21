@@ -20,12 +20,12 @@ int UI::Begin(HINSTANCE hInstance, int nCmdShow)
     wcex.cbClsExtra = 0;
     wcex.cbWndExtra = 0;
     wcex.hInstance = hInstance;
-    wcex.hIcon = LoadIcon(NULL, IDI_APPLICATION);
+    wcex.hIcon = LoadIcon(NULL, MAKEINTRESOURCE(MAINICON));
     wcex.hCursor = LoadCursor(nullptr, IDC_ARROW);
     wcex.hbrBackground = NULL;
     wcex.lpszMenuName = MAKEINTRESOURCE(MAINMENU); 
     wcex.lpszClassName = c_lpszWndClassName;
-    wcex.hIconSm = LoadIcon(NULL, IDI_APPLICATION);
+    wcex.hIconSm = LoadIcon(hInstance, MAKEINTRESOURCE(MAINICON));
     
     capMenuAppendCy = GetSystemMetrics(SM_CYMENU) + GetSystemMetrics(SM_CYMIN);
 
@@ -169,6 +169,7 @@ bool UI::MessageProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             MessageBox(m_hWnd, c_lpszHelp, TEXT("帮助"), MB_OK | MB_ICONQUESTION); 
             MessageBox(m_hWnd, c_lpszHelpProp, TEXT("道具系统"), MB_OK | MB_ICONQUESTION);
             MessageBox(m_hWnd, c_lpszHelpScore, TEXT("分数系统"), MB_OK | MB_ICONQUESTION);
+            MessageBox(m_hWnd, c_lpszHelpMusic, TEXT("温馨提示"), MB_OK | MB_ICONQUESTION); 
             break; 
         }
         case IDM_ABOUT: 
@@ -283,6 +284,15 @@ loadMainMusic:
         }
     }
     else PlaySound(MAIN_MUSIC_PATH, NULL, SND_ASYNC | SND_LOOP); 
+
+loadBombMusic: if (FindFirstFile(BOMB_MUSIC_PATH, &wfd) == INVALID_HANDLE_VALUE
+        && MessageBox(m_hWnd, MUSIC_LOAD_FAIL_STR(BOMB_MUSIC_PATH), c_lpszError, MB_RETRYCANCEL | MB_ICONERROR) == IDRETRY) goto loadBombMusic; 
+loadPropMusic: if (FindFirstFile(PICK_PROP_MUSIC_PATH, &wfd) == INVALID_HANDLE_VALUE
+        && MessageBox(m_hWnd, MUSIC_LOAD_FAIL_STR(PICK_PROP_MUSIC_PATH), c_lpszError, MB_RETRYCANCEL | MB_ICONERROR) == IDRETRY) goto loadPropMusic;
+loadFailMusic: if (FindFirstFile(FAIL_MUSIC_PATH, &wfd) == INVALID_HANDLE_VALUE
+        && MessageBox(m_hWnd, MUSIC_LOAD_FAIL_STR(FAIL_MUSIC_PATH), c_lpszError, MB_RETRYCANCEL | MB_ICONERROR) == IDRETRY) goto loadFailMusic;
+loadSuccessMusic: if (FindFirstFile(SUCCESS_MUSIC_PATH, &wfd) == INVALID_HANDLE_VALUE
+        && MessageBox(m_hWnd, MUSIC_LOAD_FAIL_STR(SUCCESS_MUSIC_PATH), c_lpszError, MB_RETRYCANCEL | MB_ICONERROR) == IDRETRY) goto loadSuccessMusic;
 }
 
 void UI::ScanData()

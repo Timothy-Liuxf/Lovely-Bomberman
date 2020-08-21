@@ -536,20 +536,18 @@ void UI::AI(int roleID)
         //检查周围的危险
         std::vector<std::vector<bool>> dangerous(rows, std::vector<bool>(cols, false));                     //记录是否有危险
         std::vector<std::vector<bool>> obstacle(rows, std::vector<bool>(cols, false));                      //记录是否有障碍
-        std::initializer_list<int> xList{ -1, 1, 0, 0 }; 
-        std::initializer_list<int> yList{ 0, 0, -1, 1 }; 
+        std::vector<int> xMove{ -1, 1, 0, 0 };
+        std::vector<int> yMove{ 0, 0, -1, 1 };
         if (roleID == computerID2)
         {
-            xList = { 0, 0, -1, 1 }; 
-            yList = { -1, 1, 0, 0 }; 
+            xMove = { 0, 0, -1, 1 }; 
+            yMove = { -1, 1, 0, 0 }; 
         }
         else if (roleID == computerID3)
         {
-            xList = { 0, 0, 1, -1 };
-            yList = { 1, -1, 0, 0 };
+            xMove = { 0, 0, 1, -1 };
+            yMove = { 1, -1, 0, 0 };
         }
-        const std::vector<int> xMove(xList); 
-        const std::vector<int> yMove(yList); 
         for (int tmpXc = 0; tmpXc < rows; ++tmpXc)
             for (int tmpYc = 0; tmpYc < cols; ++tmpYc)
             {

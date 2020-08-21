@@ -145,7 +145,7 @@ private:
 	void BombGrenade(Grenade* pGrenade);									//使该手榴弹爆炸
 	void BombMissile(Missile* pMissile);									//导弹爆炸
 	void BombMapCell(BombArea* pBombArea);									//爆破地图的一块
-	void RoleMiss(Role *pRole); 											//管理角色受伤后的保护状态
+	void ReleaseRoleMiss(Role *pRole); 										//管理角色受伤后的保护状态
 	void CreateProp(int xc, int yc);										//在该点产生道具
 };
 

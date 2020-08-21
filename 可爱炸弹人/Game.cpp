@@ -728,7 +728,8 @@ void Game::CheckBomb(int dataScanInterval)
 								pRole->GetMutex().unlock();
 								if (hit)
 								{
-									std::thread setRoleMiss(&Game::RoleMiss, this, pRole);	//进入保护状态
+									pRole->GetMutex().lock(); pRole->SetMissing(true); pRole->GetMutex().unlock(); 
+									std::thread setRoleMiss(&Game::ReleaseRoleMiss, this, pRole);	//进入保护状态
 									setRoleMiss.detach();
 									if (pSpecialBomb->GetOwnerID() != pRole->GetID())		//如果炸到的不是自己，加分
 									{
@@ -1076,7 +1077,8 @@ void Game::BombMapCell(BombArea* pBombArea)
 			pRole->GetMutex().unlock();
 			if (hit)
 			{
-				std::thread setRoleMiss(&Game::RoleMiss, this, pRole);	//进入保护状态
+				pRole->GetMutex().lock(); pRole->SetMissing(true); pRole->GetMutex().unlock();
+				std::thread setRoleMiss(&Game::ReleaseRoleMiss, this, pRole);	//进入保护状态
 				setRoleMiss.detach(); 
 				if (pBombArea->GetOwnerID() != pRole->GetID())			//如果炸到的不是自己，加分
 				{
@@ -1133,9 +1135,8 @@ void Game::BombMapCell(BombArea* pBombArea)
 	}
 }
 
-void Game::RoleMiss(Role* pRole)
+void Game::ReleaseRoleMiss(Role* pRole)
 {
-	pRole->GetMutex().lock(); pRole->SetMissing(true); pRole->GetMutex().unlock(); 
 	std::this_thread::sleep_for(std::chrono::milliseconds(playerMissingTime)); 
 	pRole->GetMutex().lock(); pRole->SetMissing(false); pRole->GetMutex().unlock();
 }

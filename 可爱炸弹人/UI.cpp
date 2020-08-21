@@ -381,7 +381,14 @@ void UI::EndGame(int result)
                 pRoleControl->wait(); delete pRoleControl; pRoleControl = nullptr;
             }
         }
-        Sleep(1000);
+        if (pGame)
+        {
+            for (int i = 1; i <= 4; ++i)
+            {
+                while (pGame->GetRole(i)->IsMissing()) Sleep(1000 / dataFps); 
+            }
+            Sleep(500); 
+        }
     }; 
 
     std::function<void(void)> beginGame = [this]()
@@ -417,8 +424,11 @@ void UI::EndGame(int result)
     {
         programState = programstate::starting; 
 
-        delete pGame;
-        pGame = nullptr;
+        if (pGame)
+        {
+            delete pGame;
+            pGame = nullptr;
+        }
 
         HMENU hMenu = GetMenu(m_hWnd);
         EnableMenuItem(hMenu, IDM_START, FALSE);
@@ -427,6 +437,13 @@ void UI::EndGame(int result)
         EnableMenuItem(hMenu, IDM_END, TRUE);
         InvalidateRect(m_hWnd, NULL, FALSE);
     }; 
+
+    if (result == 4)
+    {
+        waitTask(); 
+        endGame(); 
+        return; 
+    }
 
     int totalScore = 0; 
     std::_tostringstream outStr; 
@@ -2011,32 +2028,7 @@ UI::~UI()
 {
     if(hBmMem) DeleteObject(hBmMem); 
     
-    programState = programstate::starting;
-
-    //µÈ´ýÒì²½½áÊø
-    if (pScanDataTask)
-    {
-        delete pScanDataTask; pScanDataTask = nullptr;
-    }
-    if (pRefreshScreenTask)
-    {
-        delete pRefreshScreenTask; pRefreshScreenTask = nullptr;
-    }
-
-    for (auto& pRoleControl : pRoleControlTasks)
-    {
-        if (pRoleControl)
-        {
-            delete pRoleControl; pRoleControl = nullptr;
-        }
-    }
-
-    if (pGame)
-    {
-        Sleep(800);
-        delete pGame;
-        pGame = nullptr;
-    }
+    EndGame(4); 
 }
 
 bool UI::StartGameDlg::Begin(HINSTANCE hInstance, HWND hWndParent)

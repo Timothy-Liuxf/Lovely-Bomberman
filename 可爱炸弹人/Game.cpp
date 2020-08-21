@@ -519,29 +519,24 @@ void Game::CheckRole()
 						{
 						case Prop::propType::glove:							//捡起手套
 							pRole->WearGlove(); 
-							PickPropSound(); 
 							break; 
 						case Prop::propType::shield:						//捡起盾牌
 							pRole->WearShield(); 
-							PickPropSound();
 							break; 
 						case Prop::propType::addtnt:						//加TNT数量
 							pRole->AddTntNum(); 
-							PickPropSound();
 							break; 
 						case Prop::propType::addlife:						//加生命值
 							pRole->AddLife(); 
-							PickPropSound();
 							break; 
 						case Prop::propType::shoe:							//加移动速度
 							pRole->AddMoveSpeed(); 
-							PickPropSound();
 							break; 
 						case Prop::propType::jinKeLa:						//增加炸弹爆炸范围
 							pRole->AddDistance(); 
-							PickPropSound();
 							break; 
 						}
+						PickPropSound();
 						pRole->AddNowScore(scoreOfPickProp); 
 						pRole->GetMutex().unlock(); 
 						//buff类道具消失
@@ -556,6 +551,7 @@ void Game::CheckRole()
 						pRole->SetWeapon(dynamic_cast<SpecialBomb*>(pProp)); 
 						pRole->GetMutex().unlock();
 						dynamic_cast<SpecialBomb*>(pProp)->SetPicked(pRole->GetID());	//设置为捡起状态
+						pRole->AddNowScore(scoreOfPickProp);
 						PickPropSound();
 						if (pPrevWeapon) { deletedObjsMutex.lock(); deletedObjs.push_back(pPrevWeapon); deletedObjsMutex.unlock(); }
 					}

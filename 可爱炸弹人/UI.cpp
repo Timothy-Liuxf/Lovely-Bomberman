@@ -285,6 +285,8 @@ loadMainMusic:
     }
     else PlaySound(MAIN_MUSIC_PATH, NULL, SND_ASYNC | SND_LOOP); 
 
+findSoundExe: if (FindFirstFile(SOUND_EXE_PATH, &wfd) == INVALID_HANDLE_VALUE
+    && MessageBox(m_hWnd, SOUND_EXE_NOT_FOUND, c_lpszError, MB_RETRYCANCEL | MB_ICONERROR) == IDRETRY) goto findSoundExe;
 loadBombMusic: if (FindFirstFile(BOMB_MUSIC_PATH, &wfd) == INVALID_HANDLE_VALUE
         && MessageBox(m_hWnd, MUSIC_LOAD_FAIL_STR(BOMB_MUSIC_PATH), c_lpszError, MB_RETRYCANCEL | MB_ICONERROR) == IDRETRY) goto loadBombMusic; 
 loadPropMusic: if (FindFirstFile(PICK_PROP_MUSIC_PATH, &wfd) == INVALID_HANDLE_VALUE

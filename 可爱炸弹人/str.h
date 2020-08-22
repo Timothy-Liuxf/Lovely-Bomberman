@@ -82,6 +82,9 @@ static LPCTSTR c_lpszHelpMusic = TEXT("打开声音游戏效果更佳");
 #define MAIN_MUSIC_PATH TEXT("sound\\mainmusic.wav")
 #define MAIN_MUSIC_LOAD_FAIL_STR TEXT("找不到声音：") MAIN_MUSIC_PATH TEXT("\nCannot find sound: ") MAIN_MUSIC_PATH
 
+#define SOUND_EXE_PATH TEXT("GameSound.exe")
+#define SOUND_EXE_NOT_FOUND TEXT("找不到音效播放程序：") SOUND_EXE_PATH TEXT("\nCannot find the file for playing sound: ") SOUND_EXE_PATH
+
 #define BOMB_MUSIC_PATH TEXT("sound\\bomb.wav")
 #define SUCCESS_MUSIC_PATH TEXT("sound\\success.wav")
 #define FAIL_MUSIC_PATH TEXT("sound\\fail.wav")

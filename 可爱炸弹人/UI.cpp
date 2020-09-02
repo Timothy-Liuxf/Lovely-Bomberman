@@ -520,7 +520,7 @@ void UI::EndGame(int result)
 void UI::AI(int roleID)
 {
     int rows, cols; 
-    if (pGame) rows = pGame->GetGameMap(pGame->GetNowLevel()).size(), cols = pGame->GetGameMap(pGame->GetNowLevel())[0].size(); 
+    if (pGame) rows = (int)pGame->GetGameMap(pGame->GetNowLevel()).size(), cols = (int)pGame->GetGameMap(pGame->GetNowLevel())[0].size(); 
     else return; 
 
     int computerID1 = 0, computerID2 = 0, computerID3 = 0, computerID4 = 0; 
@@ -990,7 +990,7 @@ void UI::AI(int roleID)
                         pGame->LayTnt(roleID); 
                         if (pGame->GetRole(roleID)->GetWeapon() == nullptr)
                         {
-                            int now = laidMine.size(); 
+                            int now = (int)laidMine.size(); 
                             laidMineMutex.lock(); 
                             laidMine.emplace_back(std::make_pair(xc, yc), true); 
                             laidMineMutex.unlock(); 
@@ -1767,7 +1767,7 @@ void UI::Paint(HWND hWnd, const BOOL calledByPaintMessage)
     {
         BitBlt(hdcMem, 0, 0, objSize * 15, objSize * 13, hdcObj, 0, 0, SRCCOPY); 
         if (pGame == nullptr) break; 
-        int rows = pGame->GetGameMap(pGame->GetNowLevel()).size(), cols = pGame->GetGameMap(pGame->GetNowLevel())[0].size();
+        int rows = (int)pGame->GetGameMap(pGame->GetNowLevel()).size(), cols = (int)pGame->GetGameMap(pGame->GetNowLevel())[0].size();
         for (int i = 0; i < rows; ++i)
         {
             for (int j = 0; j < cols; ++j)
@@ -1932,7 +1932,7 @@ void UI::Paint(HWND hWnd, const BOOL calledByPaintMessage)
         if constexpr (std::is_same<std::_tostringstream, std::wostringstream>::value) levelStr.imbue(std::locale("chs"));
         levelStr << TEXT("第 ") << nowLevel << TEXT(" 关"); 
         RECT rc = { 15 * objSize, 0, mainWndSize.x, mainWndSize.y };
-        DrawText(hdcMem, levelStr.str().c_str(), levelStr.str().length(), &rc, DT_CENTER);
+        DrawText(hdcMem, levelStr.str().c_str(), (int)levelStr.str().length(), &rc, DT_CENTER);
 
         //打印角色信息
         for (int i = 0; i < 4; ++i)
@@ -2000,13 +2000,13 @@ void UI::Paint(HWND hWnd, const BOOL calledByPaintMessage)
             
             lifeStr << TEXT("生命：") << pRole->GetLife(); 
             rc.left = rolePaintPos.x + objSize; rc.right = mainWndSize.x; rc.top = rolePaintPos.y + objSize; rc.bottom = rolePaintPos.y + objSize * 2; 
-            DrawText(hdcMem, lifeStr.str().c_str(), lifeStr.str().length(), &rc, DT_LEFT); 
+            DrawText(hdcMem, lifeStr.str().c_str(), (int)lifeStr.str().length(), &rc, DT_LEFT); 
             //分数
             std::_tostringstream scoreStr;
             if constexpr (std::is_same<std::_tostringstream, std::wostringstream>::value) scoreStr.imbue(std::locale("chs"));
             scoreStr << TEXT("分数：") << pRole->GetNowScore(); 
             rc.left = rolePaintPos.x + objSize; rc.right = mainWndSize.x; rc.top = rolePaintPos.y + 2 * objSize; rc.bottom = rolePaintPos.y + objSize * 3;
-            DrawText(hdcMem, scoreStr.str().c_str(), scoreStr.str().length(), &rc, DT_LEFT);
+            DrawText(hdcMem, scoreStr.str().c_str(), (int)scoreStr.str().length(), &rc, DT_LEFT);
         }
         SelectObject(hdcMem, hFOld);
         DeleteObject(hF);

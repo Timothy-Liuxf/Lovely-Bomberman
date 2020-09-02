@@ -11,7 +11,7 @@ int APIENTRY _tWinMain(_In_ HINSTANCE hInstance,
 {
     UNREFERENCED_PARAMETER(hPrevInstance);
     UNREFERENCED_PARAMETER(lpCmdLine);
-    int sz = _tcslen(lpCmdLine);
+    int sz = (int)_tcslen(lpCmdLine);
     switch (lpCmdLine[sz - 1])
     {
     case TEXT('1'):

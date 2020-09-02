@@ -149,7 +149,7 @@ const std::vector<std::vector<int>>& Game::GetGameMap(unsigned int num) const
 
 Game::Game(int numOfPlayer, int id1, int id2, Difficulty difficulty) : numOfPlayer(numOfPlayer), id1(id1), id2(id2), nowLevel(0), difficulty(difficulty), randNum((unsigned)time(nullptr))
 {
-	int rows = gameMap[0].size(), cols = gameMap[0][0].size(); 
+	int rows = (int)gameMap[0].size(), cols = (int)gameMap[0][0].size(); 
 	roles.resize(5, nullptr); 
 	obj_base::SetMapBound(rows, cols, defPosUnitPerCell); 
 	std::function<int(int, int)> GetRoleID = [rows, cols](int x, int y)
@@ -210,7 +210,7 @@ void Game::InitNewLevel(int newLevel, bool mergeScore)
 		}
 		else roles[i]->Reset(true, true); 
 	}
-	int rows = gameMap[newLevel].size(), cols = gameMap[newLevel][0].size(); 
+	int rows = (int)gameMap[newLevel].size(), cols = (int)gameMap[newLevel][0].size(); 
 	for (int x = 0; x < rows; ++x)
 		for (int y = 0; y < cols; ++y)
 		{

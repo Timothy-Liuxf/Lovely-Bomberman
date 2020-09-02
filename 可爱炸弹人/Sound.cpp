@@ -8,8 +8,14 @@ void AllSound(int i)
 	memset(&si, 0, sizeof(si));
 	memset(&pi, 0, sizeof(pi));
 	si.cb = sizeof(si);
-	TCHAR s[20] = TEXT("\"GameSound.exe\" ");
-	_tcscat_s(s, 20, num[i]); 
+
+#ifdef _WIN64
+	TCHAR s[50] = TEXT("\"GameSound(x64).exe\" ");
+#else	//ifdef _WIN64
+	TCHAR s[50] = TEXT("\"GameSound.exe\" ");
+#endif	//ifdef _WIN64
+	
+	_tcscat_s(s, 50, num[i]); 
 	CreateProcess(NULL, s, NULL, NULL, FALSE, CREATE_NEW_CONSOLE, NULL, NULL, &si, &pi);
 	CloseHandle(pi.hThread);
 	CloseHandle(pi.hProcess);

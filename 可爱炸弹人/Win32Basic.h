@@ -10,5 +10,4 @@
 #include <windows.h>
 #include <tchar.h>
 
-
 #endif	//#ifndef WIN32_BASIC_H

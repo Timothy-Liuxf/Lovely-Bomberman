@@ -15,7 +15,7 @@ INT_PTR CALLBACK BasicModalDialog::DlgProc(HWND hDlg, UINT message, WPARAM wPara
 	{
 		thisDlg = (BasicModalDialog*)lParam; 
 		thisDlg->m_hDlg = hDlg; 
-		SetWindowLongPtr(hDlg, GWLP_USERDATA, (LONG)thisDlg); 
+		SetWindowLongPtr(hDlg, GWLP_USERDATA, (LONG_PTR)thisDlg); 
 	}
 	thisDlg = (BasicModalDialog*)GetWindowLongPtr(hDlg, GWLP_USERDATA); 
 	if (thisDlg) thisDlg->MessageProc(hDlg, message, wParam, lParam); 

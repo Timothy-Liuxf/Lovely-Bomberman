@@ -61,7 +61,7 @@ LRESULT CALLBACK BasicWindow::WndProc(HWND hWnd, UINT message, WPARAM wParam, LP
     if (message == WM_CREATE)
     {
         thisWnd = (BasicWindow*)(((LPCREATESTRUCT)lParam)->lpCreateParams);     //获取窗口对象指针
-        SetWindowLongPtr(hWnd, GWLP_USERDATA, (LONG)thisWnd);
+        SetWindowLongPtr(hWnd, GWLP_USERDATA, (LONG_PTR)thisWnd);
     }
     else thisWnd = (BasicWindow*)GetWindowLongPtr(hWnd, GWLP_USERDATA); 
     if (thisWnd == NULL) return DefWindowProc(hWnd, message, wParam, lParam); 

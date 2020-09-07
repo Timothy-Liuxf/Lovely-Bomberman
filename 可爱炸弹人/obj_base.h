@@ -66,7 +66,7 @@ public:
 	sigPosType GetMoveSpeed() const { return moveSpeed; }
 
 	//获取互斥锁
-	std::mutex& GetMutex() { return objMutex; }
+	std::mutex& GetMutex() const { return objMutex; }
 	
 	//获取对象类型虚函数
 	virtual objType GetObjType() const = 0; 
@@ -89,7 +89,7 @@ protected:
 	posType pos;			//位置坐标
 	bool isMoving;			//是否在移动
 	sigPosType moveSpeed;	//移动速度
-	std::mutex objMutex;	//互斥锁，供多线程使用
+	mutable std::mutex objMutex;	//互斥锁，供多线程使用
 };
 
 #endif // #ifndef OBJBASE_H

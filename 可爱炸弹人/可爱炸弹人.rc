@@ -161,12 +161,16 @@ BEGIN
     DEFPUSHBUTTON   "È·¶¨",IDOK,14,55,144,14
 END
 
+
 /////////////////////////////////////////////////////////////////////////////
 //
-// ICON
+// Icon
 //
 
-MAINICON ICON "image\\mainicon.ico"
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+MAINICON                ICON                    "image\\mainicon.ico"
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -183,10 +187,6 @@ BEGIN
     INPUTNAME_DIALOG, DIALOG
     BEGIN
         BOTTOMMARGIN, 60
-    END
-
-    HELP_DIALOG, DIALOG
-    BEGIN
     END
 END
 #endif    // APSTUDIO_INVOKED

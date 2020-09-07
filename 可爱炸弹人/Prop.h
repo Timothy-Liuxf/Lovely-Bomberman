@@ -241,7 +241,7 @@ class Ice final : public SpecialBomb
 {
 public:
 	Ice(sigPosType x, sigPosType y) : SpecialBomb(x, y) {}
-	virtual propType GetPropType() const override { return propType::mine; }
+	virtual propType GetPropType() const override { return propType::ice; }
 
 	//检查冰是否要消失了
 	virtual bool AboutToDisappear() const override { return false; }

@@ -1,6 +1,6 @@
 ////////////////////////////////
 //
-//  一且游戏对象的基类
+//  obj_base.h : 一切游戏对象的基类
 //
 
 #ifndef OBJ_BASE_H
@@ -22,7 +22,7 @@ public:
 		tagPosType(const tagPosType& orgPos) : x(orgPos.x), y(orgPos.y) {}
 	} posType;
 
-	enum class objType		//对象类型
+	enum class objType	//对象类型
 	{
 		null,			//不是任何类型
 		role,			//角色
@@ -83,7 +83,7 @@ protected:
 	static posType maxPos; 
 	static const sigPosType EPS;				//坐标精度
 	static obj_base::sigPosType posUnitPerCell;	//每个格子的边长
-	void CorrectPos();						//修正坐标，放置越界
+	void CorrectPos();							//修正坐标，放置越界
 
 
 	posType pos;			//位置坐标

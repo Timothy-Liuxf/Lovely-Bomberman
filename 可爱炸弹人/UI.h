@@ -175,7 +175,7 @@ private:
 	};
 
 	StartGameDlg startGameDlg; 
-	InputNameDlg inputName; 
+	InputNameDlg inputNameDlg; 
 };
 
 #endif	// #ifndef GLOBALS_H

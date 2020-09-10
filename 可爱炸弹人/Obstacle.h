@@ -4,6 +4,11 @@
 
 #include "obj_base.h"
 
+////////////////////////////////
+//
+//  Obstacle.h : 一切游戏对象的基类
+//
+
 //障碍基类
 class Obstacle : public obj_base
 {

@@ -315,9 +315,9 @@ void UI::ScanData()
     }
 }
 
-void UI::RoleControl(int roleID)
+void UI::RoleControl(int roleID)        //角色键盘控制
 {
-    if (roleID == pGame->GetID1())
+    if (roleID == pGame->GetID1())      //角色1
     {
         playerLay[0] = false; 
         while (programState == programstate::gaming || programState == programstate::gamePulsing)
@@ -333,7 +333,7 @@ void UI::RoleControl(int roleID)
             Sleep(1000 / dataFps); 
         }
     }
-    else if (roleID == pGame->GetID2())
+    else if (roleID == pGame->GetID2()) //角色2
     {
         playerLay[1] = false;
         while (programState == programstate::gaming || programState == programstate::gamePulsing)
@@ -1733,8 +1733,8 @@ void UI::newScore(int numOfPlayer, Game::Difficulty difficulty, int score)
     }
     if (highScoreInfo[pos].second < score)
     {
-        inputName.Begin(m_hInst, m_hWnd); 
-        highScoreInfo[pos] = std::make_pair(inputName.GetName(), score); 
+        inputNameDlg.Begin(m_hInst, m_hWnd); 
+        highScoreInfo[pos] = std::make_pair(inputNameDlg.GetName(), score); 
         SaveHighScore(highScoreInfo); 
     }
 }

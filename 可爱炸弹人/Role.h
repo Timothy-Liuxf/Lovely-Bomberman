@@ -15,7 +15,7 @@ class Role : public obj_base
 {
 public: 
 
-	Role(sigPosType x, sigPosType y, int moveSpeed, int id, int initialLife)
+	Role(sigPosType x, sigPosType y, sigPosType moveSpeed, int id, int initialLife)
 		: obj_base(x, y, false, moveSpeed),
 		id(id), 
 		distance(2), 
@@ -168,7 +168,7 @@ private:
 	SpecialBomb* weapon;	//手中持有的武器
 	direction direct;		//朝向
 	const posType orgPos;	//原先的位置
-	const int orgMoveSpeed; //原先的移动速度
+	const sigPosType orgMoveSpeed; //原先的移动速度
 
 	void SetDirect(direction newDirect) { direct = newDirect; }
 

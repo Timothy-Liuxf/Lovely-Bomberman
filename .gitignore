@@ -1,8 +1,5 @@
 /可爱炸弹人/Debug/
 /可爱炸弹人/Release/
-/可爱炸弹人/*.vcxproj
-/可爱炸弹人/*.vcxproj.*
-/可爱炸弹人/*.aps
 /可爱炸弹人/*.cd
 /可爱炸弹人/imageMaker/
 /可爱炸弹人/soundMaker/
@@ -12,9 +9,6 @@
 /可爱炸弹人/x64/
 /GameSound/Debug/
 /GameSound/Release/
-/GameSound/*.vcxproj
-/GameSound/*.vcxproj.*
-/GameSound/*.aps
 /GameSound/*.cd
 /GameSound/x64/
 /test/
@@ -23,4 +17,3 @@
 /.vs/
 /x64/
 *.zip
-*.sln

@@ -193,57 +193,61 @@ bool UI::MessageProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
 bool UI::LoadGameImg()
 {
+loadImageDll:
+
+    HMODULE hImgDll = LoadLibrary(IMG_DLL_NAME);
+    if (hImgDll == NULL)
+    {
+    chooseDllFail:
+        switch (MessageBox(m_hWnd, TEXT("ÕÒ²»µ½")IMG_DLL_NAME, c_lpszError, MB_ABORTRETRYIGNORE | MB_ICONERROR))
+        {
+        case IDRETRY: goto loadImageDll;
+        default: case IDABORT: return false;
+        case IDIGNORE:
+            if (MessageBox(m_hWnd, c_lpszWarning, c_lpszWarningTitle, MB_YESNO | MB_ICONWARNING) != IDYES) goto chooseDllFail;
+            else goto endGet;
+        }
+    }
+
 loadImage: 
 
-    hBmBkgnd = (HBITMAP)LoadImage(m_hInst, BKGND_PATH, IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
-    hBmMain = (HBITMAP)LoadImage(m_hInst, MAIN_PATH, IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
-    hBmRole = (HBITMAP)LoadImage(m_hInst, ROLE_PATH, IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
-    hBmTnt = (HBITMAP)LoadImage(m_hInst, TNT_PATH, IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE); 
-    hBmObstacle = (HBITMAP)LoadImage(m_hInst, OBSTACLE_PATH, IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE); 
-    hBmGlove = (HBITMAP)LoadImage(m_hInst, GLOVE_PATH, IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
-    hBmShield = (HBITMAP)LoadImage(m_hInst, SHIELD_PATH, IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
-    hBmAddTnt = (HBITMAP)LoadImage(m_hInst, ADDTNT_PATH, IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
-    hBmAddLife = (HBITMAP)LoadImage(m_hInst, ADDLIFE_PATH, IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
-    hBmShoe = (HBITMAP)LoadImage(m_hInst, SHOE_PATH, IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
-    hBmJinKeLa = (HBITMAP)LoadImage(m_hInst, JINKELA_PATH, IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
-    hBmLachrymator = (HBITMAP)LoadImage(m_hInst, LACHRYMATOR_PATH, IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
-    hBmMine = (HBITMAP)LoadImage(m_hInst, MINE_PATH, IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
-    hBmFire = (HBITMAP)LoadImage(m_hInst, FIRE_PATH, IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
-    hBmIce = (HBITMAP)LoadImage(m_hInst, ICE_PATH, IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
-    hBmGrenade = (HBITMAP)LoadImage(m_hInst, GRENADE_PATH, IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
-    hBmMissile = (HBITMAP)LoadImage(m_hInst, MISSILE_PATH, IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
+    hBmBkgnd = (HBITMAP)LoadImage(hImgDll, MAKEINTRESOURCE(IDB_BKGND), IMAGE_BITMAP, 0, 0, 0);
+    hBmMain = (HBITMAP)LoadImage(hImgDll, MAKEINTRESOURCE(IDB_MAIN), IMAGE_BITMAP, 0, 0, 0);
+    hBmRole = (HBITMAP)LoadImage(hImgDll, MAKEINTRESOURCE(IDB_ROLE), IMAGE_BITMAP, 0, 0, 0);
+    hBmTnt = (HBITMAP)LoadImage(hImgDll, MAKEINTRESOURCE(IDB_TNT), IMAGE_BITMAP, 0, 0, 0); 
+    hBmObstacle = (HBITMAP)LoadImage(hImgDll, MAKEINTRESOURCE(IDB_OBSTACLE), IMAGE_BITMAP, 0, 0, 0); 
+    hBmGlove = (HBITMAP)LoadImage(hImgDll, MAKEINTRESOURCE(IDB_GLOVE), IMAGE_BITMAP, 0, 0, 0);
+    hBmShield = (HBITMAP)LoadImage(hImgDll, MAKEINTRESOURCE(IDB_SHIELD), IMAGE_BITMAP, 0, 0, 0);
+    hBmAddTnt = (HBITMAP)LoadImage(hImgDll, MAKEINTRESOURCE(IDB_ADDTNT), IMAGE_BITMAP, 0, 0, 0);
+    hBmAddLife = (HBITMAP)LoadImage(hImgDll, MAKEINTRESOURCE(IDB_ADDLIFE), IMAGE_BITMAP, 0, 0, 0);
+    hBmShoe = (HBITMAP)LoadImage(hImgDll, MAKEINTRESOURCE(IDB_SHOE), IMAGE_BITMAP, 0, 0, 0);
+    hBmJinKeLa = (HBITMAP)LoadImage(hImgDll, MAKEINTRESOURCE(IDB_JINKELA), IMAGE_BITMAP, 0, 0, 0);
+    hBmLachrymator = (HBITMAP)LoadImage(hImgDll, MAKEINTRESOURCE(IDB_LACHRYMATOR), IMAGE_BITMAP, 0, 0, 0);
+    hBmMine = (HBITMAP)LoadImage(hImgDll, MAKEINTRESOURCE(IDB_MINE), IMAGE_BITMAP, 0, 0, 0);
+    hBmFire = (HBITMAP)LoadImage(hImgDll, MAKEINTRESOURCE(IDB_FIRE), IMAGE_BITMAP, 0, 0, 0);
+    hBmIce = (HBITMAP)LoadImage(hImgDll, MAKEINTRESOURCE(IDB_ICE), IMAGE_BITMAP, 0, 0, 0);
+    hBmGrenade = (HBITMAP)LoadImage(hImgDll, MAKEINTRESOURCE(IDB_GRENADE), IMAGE_BITMAP, 0, 0, 0);
+    hBmMissile = (HBITMAP)LoadImage(hImgDll, MAKEINTRESOURCE(IDB_MISSILE), IMAGE_BITMAP, 0, 0, 0);
 
     if (!hBmBkgnd || !hBmRole || !hBmTnt || !hBmObstacle || !hBmGlove || !hBmShield | !hBmAddTnt || !hBmAddLife || !hBmShoe 
         || !hBmJinKeLa || !hBmLachrymator || !hBmMine || !hBmFire || !hBmIce || !hBmGrenade || !hBmMissile)
     {
 
-        if (!hBmBkgnd) MessageBox(m_hWnd, IMAGE_LOAD_FAIL_STR(BKGND_PATH), c_lpszError, MB_OK | MB_ICONERROR);
-        if (!hBmMain) MessageBox(m_hWnd, IMAGE_LOAD_FAIL_STR(MAIN_PATH), c_lpszError, MB_OK | MB_ICONERROR);
-        if (!hBmRole) MessageBox(m_hWnd, IMAGE_LOAD_FAIL_STR(ROLE_PATH), c_lpszError, MB_OK | MB_ICONERROR);
-        if (!hBmTnt) MessageBox(m_hWnd, IMAGE_LOAD_FAIL_STR(TNT_PATH), c_lpszError, MB_OK | MB_ICONERROR);
-        if (!hBmObstacle) MessageBox(m_hWnd, IMAGE_LOAD_FAIL_STR(OBSTACLE_PATH), c_lpszError, MB_OK | MB_ICONERROR);
-        if (!hBmGlove) MessageBox(m_hWnd, IMAGE_LOAD_FAIL_STR(GLOVE_PATH), c_lpszError, MB_OK | MB_ICONERROR);
-        if (!hBmShield) MessageBox(m_hWnd, IMAGE_LOAD_FAIL_STR(SHIELD_PATH), c_lpszError, MB_OK | MB_ICONERROR);
-        if (!hBmAddTnt) MessageBox(m_hWnd, IMAGE_LOAD_FAIL_STR(ADDTNT_PATH), c_lpszError, MB_OK | MB_ICONERROR);
-        if (!hBmAddLife) MessageBox(m_hWnd, IMAGE_LOAD_FAIL_STR(ADDLIFE_PATH), c_lpszError, MB_OK | MB_ICONERROR);
-        if (!hBmShoe) MessageBox(m_hWnd, IMAGE_LOAD_FAIL_STR(SHOE_PATH), c_lpszError, MB_OK | MB_ICONERROR);
-        if (!hBmJinKeLa) MessageBox(m_hWnd, IMAGE_LOAD_FAIL_STR(JINKELA_PATH), c_lpszError, MB_OK | MB_ICONERROR);
-        if (!hBmLachrymator) MessageBox(m_hWnd, IMAGE_LOAD_FAIL_STR(LACHRYMATOR_PATH), c_lpszError, MB_OK | MB_ICONERROR);
-        if (!hBmMine) MessageBox(m_hWnd, IMAGE_LOAD_FAIL_STR(MINE_PATH), c_lpszError, MB_OK | MB_ICONERROR);
-        if (!hBmFire) MessageBox(m_hWnd, IMAGE_LOAD_FAIL_STR(FIRE_PATH), c_lpszError, MB_OK | MB_ICONERROR);
-        if (!hBmIce) MessageBox(m_hWnd, IMAGE_LOAD_FAIL_STR(ICE_PATH), c_lpszError, MB_OK | MB_ICONERROR);
-        if (!hBmGrenade) MessageBox(m_hWnd, IMAGE_LOAD_FAIL_STR(GRENADE_PATH), c_lpszError, MB_OK | MB_ICONERROR);
-        if (!hBmMissile) MessageBox(m_hWnd, IMAGE_LOAD_FAIL_STR(MISSILE_PATH), c_lpszError, MB_OK | MB_ICONERROR);
+        MessageBox(m_hWnd, IMG_DLL_NAME TEXT("ÒÑËð»µ"), c_lpszError, MB_OK | MB_ICONERROR);
 
     choose: 
         switch (MessageBox(m_hWnd, IMAGE_LOAD_FAIL_RETRY, c_lpszError, MB_ABORTRETRYIGNORE | MB_ICONERROR))
         {
         case IDRETRY: goto loadImage; 
-        default: case IDABORT: return false; 
+        default: case IDABORT:
+            CloseHandle(hImgDll);
+            return false; 
         case IDIGNORE: 
             if (MessageBox(m_hWnd, c_lpszWarning, c_lpszWarningTitle, MB_YESNO | MB_ICONWARNING) != IDYES) goto choose; 
         }
     }
+
+getBitmap:
 
     if (hBmBkgnd) GetObject(hBmBkgnd, sizeof(BITMAP), &bmBkgnd); 
     if (hBmMain) GetObject(hBmMain, sizeof(BITMAP), &bmMain);
@@ -262,6 +266,9 @@ loadImage:
     if (hBmIce) GetObject(hBmIce, sizeof(BITMAP), &bmIce);
     if (hBmGrenade) GetObject(hBmGrenade, sizeof(BITMAP), &bmGrenade);
     if (hBmMissile) GetObject(hBmMissile, sizeof(BITMAP), &bmMissile);
+
+endGet:
+    CloseHandle(hImgDll);
 	return true; 
 }
 

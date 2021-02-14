@@ -12,6 +12,7 @@
 #include "BasicDialog.h"
 #include <queue>
 #include <future>
+#include <ImagesResource.h>
 
 //¶¨Ê±Æ÷ID
 

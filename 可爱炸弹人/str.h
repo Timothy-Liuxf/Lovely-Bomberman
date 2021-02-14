@@ -57,25 +57,6 @@ static LPCTSTR c_lpszHelpMusic = TEXT("打开声音游戏效果更佳");
 #define HIGH_SCORE_DIRECTORY TEXT("data")
 #define HIGH_SCORE_PATH HIGH_SCORE_DIRECTORY TEXT("\\HighScore.sav")
 
-//图片路径
-#define BKGND_PATH TEXT("image\\bkgnd.bmp")
-#define MAIN_PATH TEXT("image\\main.bmp")
-#define ROLE_PATH TEXT("image\\role.bmp")
-#define TNT_PATH TEXT("image\\tnt.bmp")
-#define OBSTACLE_PATH TEXT("image\\obstacle.bmp")
-#define GLOVE_PATH TEXT("image\\glove.bmp")
-#define SHIELD_PATH TEXT("image\\shield.bmp")
-#define ADDTNT_PATH TEXT("image\\addtnt.bmp")
-#define ADDLIFE_PATH TEXT("image\\addLife.bmp")
-#define SHOE_PATH TEXT("image\\shoe.bmp")
-#define JINKELA_PATH TEXT("image\\jinkela.bmp")
-#define LACHRYMATOR_PATH TEXT("image\\lachrymator.bmp")
-#define MINE_PATH TEXT("image\\mine.bmp")
-#define FIRE_PATH TEXT("image\\fire.bmp")
-#define ICE_PATH TEXT("image\\ice.bmp")
-#define GRENADE_PATH TEXT("image\\grenade.bmp")
-#define MISSILE_PATH TEXT("image\\missile.bmp")
-
 #define IMAGE_LOAD_FAIL_STR(path) TEXT("找不到图片：") path TEXT("\nCannot find image: ") path
 #define IMAGE_LOAD_FAIL_RETRY TEXT("图片加载失败！\nFailing to load images!")
 

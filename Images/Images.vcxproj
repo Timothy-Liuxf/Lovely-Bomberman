@@ -161,6 +161,25 @@
   <ItemGroup>
     <ResourceCompile Include="ImagesResource.rc" />
   </ItemGroup>
+  <ItemGroup>
+    <Image Include="image\addLife.bmp" />
+    <Image Include="image\addtnt.bmp" />
+    <Image Include="image\bkgnd.bmp" />
+    <Image Include="image\fire.bmp" />
+    <Image Include="image\glove.bmp" />
+    <Image Include="image\grenade.bmp" />
+    <Image Include="image\ice.bmp" />
+    <Image Include="image\jinkela.bmp" />
+    <Image Include="image\lachrymator.bmp" />
+    <Image Include="image\main.bmp" />
+    <Image Include="image\mine.bmp" />
+    <Image Include="image\missile.bmp" />
+    <Image Include="image\obstacle.bmp" />
+    <Image Include="image\role.bmp" />
+    <Image Include="image\shield.bmp" />
+    <Image Include="image\shoe.bmp" />
+    <Image Include="image\tnt.bmp" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

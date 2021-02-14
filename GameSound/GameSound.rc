@@ -51,8 +51,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 1,0,0,0
- PRODUCTVERSION 1,0,0,0
+ FILEVERSION 2,0,0,0
+ PRODUCTVERSION 2,0,0,0
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -68,12 +68,12 @@ BEGIN
         BLOCK "080404b0"
         BEGIN
             VALUE "FileDescription", "可爱炸弹人音效播放程序"
-            VALUE "FileVersion", "1.0.0.0"
+            VALUE "FileVersion", "2.0.0.0"
             VALUE "InternalName", "GameSound.exe"
-            VALUE "LegalCopyright", "Copyright (C) 2020 计算机程序设计基础(2) 保留所有权利"
+            VALUE "LegalCopyright", "Copyright (C) 2021 Timothy Liu 保留所有权利"
             VALUE "OriginalFilename", "GameSound.exe"
             VALUE "ProductName", "可爱炸弹人"
-            VALUE "ProductVersion", "1.0.0.0"
+            VALUE "ProductVersion", "2.0.0.0"
         END
     END
     BLOCK "VarFileInfo"
@@ -82,21 +82,23 @@ BEGIN
     END
 END
 
-#endif    // 中文(简体，中国) resources
-/////////////////////////////////////////////////////////////////////////////
-
 
 /////////////////////////////////////////////////////////////////////////////
 //
 // WAVE
 //
 
-//Sounds
+IDS_BOMB                WAVE                    "sound\\bomb.wav"
 
-IDS_BOMB			WAVE	BOMB_MUSIC_PATH
-IDS_SUCCESS			WAVE	SUCCESS_MUSIC_PATH
-IDS_FAIL			WAVE	FAIL_MUSIC_PATH
-IDS_PICK_PROP		WAVE	PICK_PROP_MUSIC_PATH
+IDS_SUCCESS             WAVE                    "sound\\success.wav"
+
+IDS_FAIL                WAVE                    "sound\\fail.wav"
+
+IDS_PICK_PROP           WAVE                    "sound\\pickProp.wav"
+
+#endif    // 中文(简体，中国) resources
+/////////////////////////////////////////////////////////////////////////////
+
 
 
 #ifndef APSTUDIO_INVOKED
@@ -104,7 +106,6 @@ IDS_PICK_PROP		WAVE	PICK_PROP_MUSIC_PATH
 //
 // Generated from the TEXTINCLUDE 3 resource.
 //
-
 
 
 /////////////////////////////////////////////////////////////////////////////

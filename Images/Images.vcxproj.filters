@@ -29,4 +29,57 @@
       <Filter>资源文件</Filter>
     </ResourceCompile>
   </ItemGroup>
+  <ItemGroup>
+    <Image Include="image\bkgnd.bmp">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="image\main.bmp">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="image\role.bmp">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="image\tnt.bmp">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="image\obstacle.bmp">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="image\glove.bmp">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="image\shield.bmp">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="image\addtnt.bmp">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="image\addLife.bmp">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="image\shoe.bmp">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="image\jinkela.bmp">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="image\lachrymator.bmp">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="image\mine.bmp">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="image\fire.bmp">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="image\ice.bmp">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="image\grenade.bmp">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="image\missile.bmp">
+      <Filter>资源文件</Filter>
+    </Image>
+  </ItemGroup>
 </Project>

@@ -88,8 +88,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 1,0,0,0
- PRODUCTVERSION 1,0,0,0
+ FILEVERSION 2,0,0,0
+ PRODUCTVERSION 2,0,0,0
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -105,12 +105,12 @@ BEGIN
         BLOCK "080404b0"
         BEGIN
             VALUE "FileDescription", "游戏可爱炸弹人主程序"
-            VALUE "FileVersion", "1.0.0.0"
+            VALUE "FileVersion", "2.0.0.0"
             VALUE "InternalName", "可爱炸弹人.exe"
-            VALUE "LegalCopyright", "Copyright (C) 2020 计算机程序设计基础(2) 保留所有权利"
+            VALUE "LegalCopyright", "Copyright (C) 2021 Timothy Liu 保留所有权利"
             VALUE "OriginalFilename", "可爱炸弹人.exe"
             VALUE "ProductName", "可爱炸弹人"
-            VALUE "ProductVersion", "1.0.0.0"
+            VALUE "ProductVersion", "2.0.0.0"
         END
     END
     BLOCK "VarFileInfo"
@@ -171,12 +171,12 @@ END
 // remains consistent on all systems.
 MAINICON                ICON                    "ico\\mainicon.ico"
 
+
 /////////////////////////////////////////////////////////////////////////////
 //
-// Wave
+// WAVE
 //
 
-//The main music
 IDM_MAINMUSIC           WAVE                    "music\\mainmusic.wav"
 
 

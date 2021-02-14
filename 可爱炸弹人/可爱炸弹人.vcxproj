@@ -188,6 +188,12 @@
   <ItemGroup>
     <ResourceCompile Include="可爱炸弹人.rc" />
   </ItemGroup>
+  <ItemGroup>
+    <Image Include="ico\mainicon.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <Media Include="music\mainmusic.wav" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

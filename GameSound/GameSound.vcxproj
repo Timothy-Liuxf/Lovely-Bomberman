@@ -172,6 +172,12 @@
   <ItemGroup>
     <ResourceCompile Include="GameSound.rc" />
   </ItemGroup>
+  <ItemGroup>
+    <Media Include="sound\bomb.wav" />
+    <Media Include="sound\fail.wav" />
+    <Media Include="sound\pickProp.wav" />
+    <Media Include="sound\success.wav" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

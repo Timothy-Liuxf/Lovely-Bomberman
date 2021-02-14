@@ -5,6 +5,8 @@
 /可爱炸弹人/imageMaker/
 /可爱炸弹人/soundMaker/
 /可爱炸弹人/data/
+/可爱炸弹人/*/*.dll
+/可爱炸弹人/*/*.exe
 /test/
 /Debug/
 /Release/

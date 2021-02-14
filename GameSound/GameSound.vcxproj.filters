@@ -29,4 +29,18 @@
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
+  <ItemGroup>
+    <Media Include="sound\bomb.wav">
+      <Filter>资源文件</Filter>
+    </Media>
+    <Media Include="sound\success.wav">
+      <Filter>资源文件</Filter>
+    </Media>
+    <Media Include="sound\fail.wav">
+      <Filter>资源文件</Filter>
+    </Media>
+    <Media Include="sound\pickProp.wav">
+      <Filter>资源文件</Filter>
+    </Media>
+  </ItemGroup>
 </Project>

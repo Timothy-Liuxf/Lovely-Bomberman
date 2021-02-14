@@ -20,7 +20,7 @@ static LPCTSTR c_lpszWarning = TEXT("这样做可能会产生致命错误，是否继续？\nThis 
 static LPCTSTR c_lpszWarningTitle = TEXT("warning");
 
 //关于
-static LPCTSTR c_lpszAbout = TEXT("名称：可爱炸弹人\n\n版本：v1.0.0.0\n\nCopyRight (C) 2020\n\n计算机程序设计基础(2) All Rights Reverved."); 
+static LPCTSTR c_lpszAbout = TEXT("名称：可爱炸弹人\n\n版本：v2.0.0.0\n\nCopyRight (C) 2021\n\n计算机程序设计基础(2) All Rights Reverved."); 
 
 //帮助
 static LPCTSTR c_lpszHelp = TEXT("本游戏有两种模式：单人模式和双人模式；三种难度：简单、一般和困难。\n\

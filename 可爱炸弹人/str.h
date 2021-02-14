@@ -60,9 +60,6 @@ static LPCTSTR c_lpszHelpMusic = TEXT("打开声音游戏效果更佳");
 #define IMAGE_LOAD_FAIL_STR(path) TEXT("找不到图片：") path TEXT("\nCannot find image: ") path
 #define IMAGE_LOAD_FAIL_RETRY TEXT("图片加载失败！\nFailing to load images!")
 
-#define MAIN_MUSIC_PATH TEXT("sound\\mainmusic.wav")
-#define MAIN_MUSIC_LOAD_FAIL_STR TEXT("找不到声音：") MAIN_MUSIC_PATH TEXT("\nCannot find sound: ") MAIN_MUSIC_PATH
-
 #ifdef _WIN64
 #define SOUND_EXE_PATH TEXT("GameSound(x64).exe")
 #else	//ifdef _WIN64
@@ -70,10 +67,6 @@ static LPCTSTR c_lpszHelpMusic = TEXT("打开声音游戏效果更佳");
 #endif	//ifdef _WIN64
 #define SOUND_EXE_NOT_FOUND TEXT("找不到音效播放程序：") SOUND_EXE_PATH TEXT("\nCannot find the file for playing sound: ") SOUND_EXE_PATH
 
-#define BOMB_MUSIC_PATH TEXT("sound\\bomb.wav")
-#define SUCCESS_MUSIC_PATH TEXT("sound\\success.wav")
-#define FAIL_MUSIC_PATH TEXT("sound\\fail.wav")
-#define PICK_PROP_MUSIC_PATH TEXT("sound\\pickProp.wav")
 #define MUSIC_LOAD_FAIL_STR(path) TEXT("找不到声音：") path TEXT("\nCannot find sound: ") path
 
 #endif	// #ifndef STR_H

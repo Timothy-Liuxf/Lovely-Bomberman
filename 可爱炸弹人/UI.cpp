@@ -7,11 +7,15 @@ const POINT UI::mainWndSize = { (objSize * 15) + 240, objSize * 13 };
 const int UI::dataFps = 50; 
 const int UI::paintFps = 50;
 
+UI::UI() : pRoleControlTasks(5, nullptr), soundPlay()
+{
+    //加载位图
+    if (!LoadGameImg()) throw FailToLoadGameImage();
+    if (!TryExecutingGameSound()) throw FailToExecuteGameSound();
+}
+
 int UI::Begin(HINSTANCE hInstance, int nCmdShow)
 {
-
-    //加载位图
-    if (!LoadGameImg()) return 0; 
 
     //定义窗口样式
     WNDCLASSEX wcex;
@@ -29,14 +33,14 @@ int UI::Begin(HINSTANCE hInstance, int nCmdShow)
     
     capMenuAppendCy = GetSystemMetrics(SM_CYMENU) + GetSystemMetrics(SM_CYMIN);
 
-    Init(hInstance, nCmdShow, 0, 0, mainWndSize.x, mainWndSize.y + capMenuAppendCy, 
-        WS_VISIBLE | WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_BORDER | WS_MINIMIZEBOX, 
-        c_lpszWndTitle, wcex, MAKEINTRESOURCE(MAINMENUACCELERATOR));
+    if (!Init(hInstance, nCmdShow, 0, 0, mainWndSize.x, mainWndSize.y + capMenuAppendCy,
+              WS_VISIBLE | WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_BORDER | WS_MINIMIZEBOX,
+              c_lpszWndTitle, wcex, MAKEINTRESOURCE(MAINMENUACCELERATOR))) return FALSE;
 
     MSG msg;
 
     programState = programstate::starting;
-    PlayMainMusic(); 
+    PlayMainMusic()();
 
     // 主消息循环:
     while (GetMessage(&msg, NULL, 0, 0))
@@ -92,7 +96,7 @@ bool UI::MessageProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             startGameDlg.Begin(m_hInst, hWnd);
             if (!startGameDlg.Choose()) break;
             pGame = new Game(startGameDlg.NumOfPlayer(), startGameDlg.Player1ID(),
-                startGameDlg.Player2ID(), startGameDlg.GetDifficulty());
+                startGameDlg.Player2ID(), startGameDlg.GetDifficulty(), soundPlay);
             pGame->InitNewLevel(0, true);
             programState = programstate::gaming;
             pScanDataTask = new std::future<void>(std::async(&UI::ScanData, this));
@@ -196,15 +200,16 @@ bool UI::LoadGameImg()
 loadImageDll:
 
     HMODULE hImgDll = LoadLibrary(IMG_DLL_NAME);
-    if (hImgDll == NULL)
+    if (hImgDll == NULL || hImgDll == INVALID_HANDLE_VALUE)
     {
+        hImgDll = NULL;
     chooseDllFail:
-        switch (MessageBox(m_hWnd, TEXT("找不到")IMG_DLL_NAME, c_lpszError, MB_ABORTRETRYIGNORE | MB_ICONERROR))
+        switch (MessageBox(NULL, TEXT("找不到")IMG_DLL_NAME, c_lpszError, MB_ABORTRETRYIGNORE | MB_ICONERROR))
         {
         case IDRETRY: goto loadImageDll;
         default: case IDABORT: return false;
         case IDIGNORE:
-            if (MessageBox(m_hWnd, c_lpszWarning, c_lpszWarningTitle, MB_YESNO | MB_ICONWARNING) != IDYES) goto chooseDllFail;
+            if (MessageBox(NULL, c_lpszWarning, c_lpszWarningTitle, MB_YESNO | MB_ICONWARNING) != IDYES) goto chooseDllFail;
             else goto endGet;
         }
     }
@@ -233,17 +238,17 @@ loadImage:
         || !hBmJinKeLa || !hBmLachrymator || !hBmMine || !hBmFire || !hBmIce || !hBmGrenade || !hBmMissile)
     {
 
-        MessageBox(m_hWnd, IMG_DLL_NAME TEXT("已损坏"), c_lpszError, MB_OK | MB_ICONERROR);
+        MessageBox(NULL, IMG_DLL_NAME TEXT("已损坏"), c_lpszError, MB_OK | MB_ICONERROR);
 
     choose: 
-        switch (MessageBox(m_hWnd, IMAGE_LOAD_FAIL_RETRY, c_lpszError, MB_ABORTRETRYIGNORE | MB_ICONERROR))
+        switch (MessageBox(NULL, IMAGE_LOAD_FAIL_RETRY, c_lpszError, MB_ABORTRETRYIGNORE | MB_ICONERROR))
         {
         case IDRETRY: goto loadImage; 
         default: case IDABORT:
-            CloseHandle(hImgDll);
+            FreeLibrary(hImgDll);
             return false; 
         case IDIGNORE: 
-            if (MessageBox(m_hWnd, c_lpszWarning, c_lpszWarningTitle, MB_YESNO | MB_ICONWARNING) != IDYES) goto choose; 
+            if (MessageBox(NULL, c_lpszWarning, c_lpszWarningTitle, MB_YESNO | MB_ICONWARNING) != IDYES) goto choose; 
         }
     }
 
@@ -268,8 +273,27 @@ getBitmap:
     if (hBmMissile) GetObject(hBmMissile, sizeof(BITMAP), &bmMissile);
 
 endGet:
-    CloseHandle(hImgDll);
+    FreeLibrary(hImgDll);
 	return true; 
+}
+
+bool UI::TryExecutingGameSound()
+{
+tryExecute:
+    if (!soundPlay.NullSound())
+    {
+        choose:
+        switch (MessageBox(NULL, TEXT("找不到音效播放程序")GAME_SOUND_EXE_NAME, c_lpszError, MB_ICONERROR | MB_ABORTRETRYIGNORE))
+        {
+        default:
+        case IDABORT: return false;
+        case IDRETRY: goto tryExecute;
+        case IDIGNORE:
+            if (MessageBox(NULL, c_lpszWarning, c_lpszWarningTitle, MB_YESNO | MB_ICONWARNING) != IDYES) goto choose;
+            break;
+        }
+    }
+    return true;
 }
 
 void UI::CreateBuffer(HWND hWnd)
@@ -277,31 +301,6 @@ void UI::CreateBuffer(HWND hWnd)
     HDC hdc = GetDC(hWnd);
     hBmMem = CreateCompatibleBitmap(hdc, mainWndSize.x, mainWndSize.y); 
     ReleaseDC(hWnd, hdc); 
-}
-
-void UI::PlayMainMusic()
-{
-loadMainMusic: 
-    WIN32_FIND_DATA wfd; 
-    if (FindFirstFile(MAIN_MUSIC_PATH, &wfd) == INVALID_HANDLE_VALUE)
-    {
-        switch (MessageBox(m_hWnd, MAIN_MUSIC_LOAD_FAIL_STR, c_lpszError, MB_RETRYCANCEL | MB_ICONERROR))
-        {
-        case IDRETRY: goto loadMainMusic; break;
-        }
-    }
-    else PlaySound(MAIN_MUSIC_PATH, NULL, SND_ASYNC | SND_LOOP); 
-
-findSoundExe: if (FindFirstFile(SOUND_EXE_PATH, &wfd) == INVALID_HANDLE_VALUE
-    && MessageBox(m_hWnd, SOUND_EXE_NOT_FOUND, c_lpszError, MB_RETRYCANCEL | MB_ICONERROR) == IDRETRY) goto findSoundExe;
-loadBombMusic: if (FindFirstFile(BOMB_MUSIC_PATH, &wfd) == INVALID_HANDLE_VALUE
-        && MessageBox(m_hWnd, MUSIC_LOAD_FAIL_STR(BOMB_MUSIC_PATH), c_lpszError, MB_RETRYCANCEL | MB_ICONERROR) == IDRETRY) goto loadBombMusic; 
-loadPropMusic: if (FindFirstFile(PICK_PROP_MUSIC_PATH, &wfd) == INVALID_HANDLE_VALUE
-        && MessageBox(m_hWnd, MUSIC_LOAD_FAIL_STR(PICK_PROP_MUSIC_PATH), c_lpszError, MB_RETRYCANCEL | MB_ICONERROR) == IDRETRY) goto loadPropMusic;
-loadFailMusic: if (FindFirstFile(FAIL_MUSIC_PATH, &wfd) == INVALID_HANDLE_VALUE
-        && MessageBox(m_hWnd, MUSIC_LOAD_FAIL_STR(FAIL_MUSIC_PATH), c_lpszError, MB_RETRYCANCEL | MB_ICONERROR) == IDRETRY) goto loadFailMusic;
-loadSuccessMusic: if (FindFirstFile(SUCCESS_MUSIC_PATH, &wfd) == INVALID_HANDLE_VALUE
-        && MessageBox(m_hWnd, MUSIC_LOAD_FAIL_STR(SUCCESS_MUSIC_PATH), c_lpszError, MB_RETRYCANCEL | MB_ICONERROR) == IDRETRY) goto loadSuccessMusic;
 }
 
 void UI::ScanData()
@@ -461,7 +460,7 @@ void UI::EndGame(int result)
 
     if (result == 1)    //玩家获胜
     {
-        SuccessSound(); 
+        soundPlay.SuccessSound(); 
         waitTask(); 
         pGame->InitNewLevel(nowLevel, true);
         totalScore += pGame->GetRole(pGame->GetID1())->GetTotalScore();
@@ -485,7 +484,7 @@ void UI::EndGame(int result)
     }
     else if (result == 2)  //电脑获胜
     {
-        FailSound(); 
+        soundPlay.FailSound(); 
         bool end = true; 
         if (pGame->GetRole(pGame->GetID1())->GetLife() > 0
             || pGame->GetNumOfPlayer() == 2 && pGame->GetRole(pGame->GetID2())->GetLife() > 0) end = false; 
@@ -513,7 +512,7 @@ void UI::EndGame(int result)
     }
     else if (result == 3)   //玩家主动结束游戏
     {
-        FailSound(); 
+        soundPlay.FailSound(); 
         totalScore += pGame->GetRole(pGame->GetID1())->GetTotalScore();
         if (pGame->GetNumOfPlayer() == 2) totalScore += pGame->GetRole(pGame->GetID2())->GetTotalScore(); 
         outStr << TEXT("游戏结束！总分：") << totalScore << TEXT("\nGame over! Total score: ") << totalScore;
@@ -2038,6 +2037,11 @@ UI::~UI()
     if(hBmMem) DeleteObject(hBmMem); 
     
     EndGame(4); 
+}
+
+void UI::PlayMainMusic::operator()() const
+{
+    PlaySound(MAKEINTRESOURCE(IDM_MAINMUSIC), GetModuleHandle(NULL), SND_ASYNC | SND_LOOP | SND_RESOURCE);
 }
 
 bool UI::StartGameDlg::Begin(HINSTANCE hInstance, HWND hWndParent)

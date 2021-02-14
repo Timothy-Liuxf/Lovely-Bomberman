@@ -13,9 +13,23 @@ int APIENTRY _tWinMain(_In_ HINSTANCE hInstance,
     UNREFERENCED_PARAMETER(hPrevInstance);
     UNREFERENCED_PARAMETER(lpCmdLine);
     
-    UI* pMainGameUI = new UI(); 
-    int ret = pMainGameUI->Begin(hInstance, nCmdShow); 
-    delete pMainGameUI; 
+    UI* pMainGameUI = nullptr;
+
+    try
+    {
+        pMainGameUI = new UI();
+    }
+    catch (std::exception&)
+    {
+        pMainGameUI = nullptr;
+    }
+
+    int ret = 0;
+    if (pMainGameUI != nullptr)
+    {
+        ret = pMainGameUI->Begin(hInstance, nCmdShow);
+        delete pMainGameUI;
+    }
 
     return ret; 
 }

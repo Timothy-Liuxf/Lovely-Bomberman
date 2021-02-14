@@ -171,6 +171,14 @@ END
 // remains consistent on all systems.
 MAINICON                ICON                    "ico\\mainicon.ico"
 
+/////////////////////////////////////////////////////////////////////////////
+//
+// Wave
+//
+
+//The main music
+IDM_MAINMUSIC           WAVE                    "music\\mainmusic.wav"
+
 
 /////////////////////////////////////////////////////////////////////////////
 //

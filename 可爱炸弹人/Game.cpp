@@ -147,7 +147,7 @@ const std::vector<std::vector<int>>& Game::GetGameMap(unsigned int num) const
 	return gameMap[num % (int)gameMap.size()];
 }
 
-Game::Game(int numOfPlayer, int id1, int id2, Difficulty difficulty) : numOfPlayer(numOfPlayer), id1(id1), id2(id2), nowLevel(0), difficulty(difficulty), randNum((unsigned)time(nullptr))
+Game::Game(int numOfPlayer, int id1, int id2, Difficulty difficulty, const SoundPlay& soundPlay) : numOfPlayer(numOfPlayer), id1(id1), id2(id2), nowLevel(0), difficulty(difficulty), randNum((unsigned)time(nullptr)), soundPlay(soundPlay)
 {
 	int rows = (int)gameMap[0].size(), cols = (int)gameMap[0][0].size(); 
 	roles.resize(5, nullptr); 
@@ -536,7 +536,7 @@ void Game::CheckRole()
 							pRole->AddDistance(); 
 							break; 
 						}
-						PickPropSound();
+						soundPlay.PickPropSound();
 						pRole->AddNowScore(scoreOfPickProp); 
 						pRole->GetMutex().unlock(); 
 						//buff类道具消失
@@ -552,7 +552,7 @@ void Game::CheckRole()
 						pRole->GetMutex().unlock();
 						dynamic_cast<SpecialBomb*>(pProp)->SetPicked(pRole->GetID());	//设置为捡起状态
 						pRole->AddNowScore(scoreOfPickProp);
-						PickPropSound();
+						soundPlay.PickPropSound();
 						if (pPrevWeapon) { deletedObjsMutex.lock(); deletedObjs.push_back(pPrevWeapon); deletedObjsMutex.unlock(); }
 					}
 					break;										//捡起了道具，就不需要继续寻找了
@@ -909,7 +909,7 @@ void Game::BombTnt(TNT* pTnt)
 	deletedObjs.push_back(pTnt); 
 	deletedObjsMutex.unlock(); 
 
-	BombSound(); 
+	soundPlay.BombSound();
 }
 
 void Game::BombFire(Fire* pFire)
@@ -991,7 +991,7 @@ void Game::BombFire(Fire* pFire)
 
 	//把火焰枪放入回收站
 	deletedObjsMutex.lock(); deletedObjs.push_back(pFire); deletedObjsMutex.unlock(); 
-	BombSound();
+	soundPlay.BombSound();
 }
 
 void Game::BombGrenade(Grenade* pGrenade)
@@ -1041,7 +1041,7 @@ void Game::BombGrenade(Grenade* pGrenade)
 	deletedObjsMutex.lock();
 	deletedObjs.push_back(pGrenade);
 	deletedObjsMutex.unlock();
-	BombSound();
+	soundPlay.BombSound();
 }
 
 void Game::BombMissile(Missile* pMissile)

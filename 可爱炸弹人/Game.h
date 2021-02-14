@@ -57,7 +57,7 @@ public:
 		difficult
 	};
 
-	Game(int numOfPlayer, int id1, int id2, Difficulty difficulty); 
+	Game(int numOfPlayer, int id1, int id2, Difficulty difficulty, const SoundPlay& soundPlay); 
 
 	int PosToCell(obj_base::sigPosType x) const { return x / defPosUnitPerCell; }
 	obj_base::sigPosType CellToPos(int x) const { return x * defPosUnitPerCell + defPosUnitPerCell / 2; }
@@ -132,7 +132,7 @@ private:
 	int nowLevel;							//当前关
 	Difficulty difficulty;					//难度
 
-	
+	const SoundPlay& soundPlay;
 	
 	//游戏地图
 	static const std::vector<std::vector<std::vector<int>>> gameMap; 

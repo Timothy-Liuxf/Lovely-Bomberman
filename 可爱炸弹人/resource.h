@@ -47,6 +47,9 @@
 //Õº±Í
 #define MAINICON 2100
 
+//“Ù¿÷
+#define IDM_MAINMUSIC 2200
+
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED

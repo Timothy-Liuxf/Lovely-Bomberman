@@ -11,20 +11,11 @@
     </Filter>
     <Filter Include="源文件">
       <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
-      <Extensions>cpp;c;cc;cxx;c++;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="WinMain.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="Prop.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="Role.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="UI.cpp">
+    <ClCompile Include="BasicDialog.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="BasicWindow.cpp">
@@ -36,27 +27,42 @@
     <ClCompile Include="obj_base.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="deleted.h">
-      <Filter>头文件</Filter>
+    <ClCompile Include="Prop.cpp">
+      <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="BasicDialog.cpp">
+    <ClCompile Include="Role.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="Sound.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="UI.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="WinMain.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="BasicDialog.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="BasicWindow.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="BombArea.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="deleted.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
     <ClInclude Include="framework.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="resource.h">
+    <ClInclude Include="Game.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="str.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="Role.h">
+    <ClInclude Include="obj_base.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="Obstacle.h">
@@ -65,31 +71,25 @@
     <ClInclude Include="Prop.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="resource.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Role.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Sound.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="str.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
     <ClInclude Include="TNT.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="BasicWindow.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="Game.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="UI.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="obj_base.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="BombArea.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="BasicDialog.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="Win32Basic.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="Sound.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
@@ -97,13 +97,5 @@
     <ResourceCompile Include="可爱炸弹人.rc">
       <Filter>资源文件</Filter>
     </ResourceCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <Image Include="image\mainicon.ico">
-      <Filter>资源文件</Filter>
-    </Image>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="ClassDiagram.cd" />
   </ItemGroup>
 </Project>

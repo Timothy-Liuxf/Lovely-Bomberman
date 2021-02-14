@@ -12,6 +12,7 @@
 #include "BasicDialog.h"
 #include <queue>
 #include <future>
+#include <exception>
 #include <ImagesResource.h>
 
 //定时器ID
@@ -22,13 +23,25 @@ class UI final : public BasicWindow
 {
 public: 
 
-	UI() : pRoleControlTasks(5, nullptr) {}
+	UI();
 
 	//开始创建窗口执行
 	int Begin(HINSTANCE hInstance, int nCmdShow); 
 	
 
-	~UI(); 
+	~UI();
+
+	class FailToLoadGameImage : std::exception
+	{
+	public:
+		virtual const char* what() const { return "Fail to load images!"; }
+	};
+
+	class FailToExecuteGameSound : std::exception
+	{
+	public:
+		virtual const char* what() const { return "Fail to execute the application for playing the sound of the game!"; }
+	};
 
 protected: 
 
@@ -125,7 +138,16 @@ private:
 
 	bool LoadGameImg();					//加载位图
 	void CreateBuffer(HWND hWnd);		//创建缓冲位图
-	void PlayMainMusic();				//播放背景音乐
+	bool TryExecutingGameSound();		//尝试加载音乐播放文件
+	const SoundPlay soundPlay;			//音乐/音效播放者
+
+	//播放背景音乐
+
+	class PlayMainMusic
+	{
+	public:
+		void operator()() const;
+	};
 
 	//开始画图
 	void Paint(HWND hWnd, BOOL calledByPaintMessage); 

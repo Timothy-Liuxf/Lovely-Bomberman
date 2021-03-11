@@ -1,12 +1,49 @@
 // Microsoft Visual C++ generated resource script.
 //
-#include "ImagesResource.h"
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include "winres.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
 /////////////////////////////////////////////////////////////////////////////
 // 中文(简体，中国) resources
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_CHS)
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 #pragma code_page(936)
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE
+BEGIN
+"resource.h\0"
+END
+
+2 TEXTINCLUDE
+BEGIN
+"#include ""winres.h""\r\n"
+"\0"
+END
+
+3 TEXTINCLUDE
+BEGIN
+"\r\n"
+"\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -48,30 +85,6 @@ IDB_GRENADE             BITMAP                  "image\\grenade.bmp"
 IDB_MISSILE             BITMAP                  "image\\missile.bmp"
 
 
-#ifdef APSTUDIO_INVOKED
-/////////////////////////////////////////////////////////////////////////////
-//
-// TEXTINCLUDE
-//
-
-1 TEXTINCLUDE 
-BEGIN
-    "resource.h\0"
-END
-
-2 TEXTINCLUDE 
-BEGIN
-    "\0"
-END
-
-3 TEXTINCLUDE 
-BEGIN
-    "\r\n"
-    "\0"
-END
-
-#endif    // APSTUDIO_INVOKED
-
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -98,7 +111,7 @@ BEGIN
             VALUE "FileDescription", "可爱炸弹人游戏图片"
             VALUE "FileVersion", "1.0.0.0"
             VALUE "InternalName", "Images.dll"
-            VALUE "LegalCopyright", "Copyright (C) 2021 Timothy Liu 保留所有权利"
+            VALUE "LegalCopyright", "Copyleft (C) 2021 Timothy Liu"
             VALUE "OriginalFilename", "Images.dll"
             VALUE "ProductName", "可爱炸弹人"
             VALUE "ProductVersion", "2.0.0.0"

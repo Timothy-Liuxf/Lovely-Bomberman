@@ -3,8 +3,10 @@
 #include <windows.h>
 #include <mmsystem.h>
 #include <tchar.h>
-#include "GameSoundResource.h"
+#include "resource.h"
 #pragma comment(lib, "winmm.lib")
+
+
 
 int APIENTRY _tWinMain(_In_ HINSTANCE hInstance,
     _In_opt_ HINSTANCE hPrevInstance,

@@ -156,7 +156,8 @@
     <ClCompile Include="DllMain.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="ImagesResource.h" />
+    <ClInclude Include="Images.h" />
+    <ClInclude Include="resource.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="ImagesResource.rc" />

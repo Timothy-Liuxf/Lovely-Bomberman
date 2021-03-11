@@ -1,6 +1,6 @@
 // Microsoft Visual C++ generated resource script.
 //
-#include "GameSoundResource.h"
+#include "resource.h"
 
 #define APSTUDIO_READONLY_SYMBOLS
 /////////////////////////////////////////////////////////////////////////////
@@ -70,7 +70,7 @@ BEGIN
             VALUE "FileDescription", "可爱炸弹人音效播放程序"
             VALUE "FileVersion", "2.0.0.0"
             VALUE "InternalName", "GameSound.exe"
-            VALUE "LegalCopyright", "Copyright (C) 2021 Timothy Liu 保留所有权利"
+            VALUE "LegalCopyright", "Copyleft (C) 2021 Timothy Liu"
             VALUE "OriginalFilename", "GameSound.exe"
             VALUE "ProductName", "可爱炸弹人"
             VALUE "ProductVersion", "2.0.0.0"

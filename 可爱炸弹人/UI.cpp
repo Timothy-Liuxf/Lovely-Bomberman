@@ -252,7 +252,7 @@ loadImage:
         }
     }
 
-getBitmap:
+//getBitmap:
 
     if (hBmBkgnd) GetObject(hBmBkgnd, sizeof(BITMAP), &bmBkgnd); 
     if (hBmMain) GetObject(hBmMain, sizeof(BITMAP), &bmMain);

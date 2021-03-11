@@ -13,7 +13,8 @@
 #include <queue>
 #include <future>
 #include <exception>
-#include <ImagesResource.h>
+#include "..\Images\Images.h"
+#include "..\Images\resource.h"
 
 //¶¨Ê±Æ÷ID
 

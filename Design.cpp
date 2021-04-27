@@ -169,3 +169,4 @@ Bomb手榴弹(手榴弹*)
 BombMapCell(ownerID, x, y); //爆破地图的一块, ok
 
 RoleMiss(int roleID); 	//角色受伤后的保护状态,ok
+
